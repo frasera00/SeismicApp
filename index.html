@@ -1,0 +1,3020 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seismic Acquisition Learning App</title>
+  <style>
+    :root {
+      --text-xs: clamp(0.7rem, 0.65rem + 0.2vw, 0.8rem);
+      --text-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem);
+      --text-base: clamp(0.9rem, 0.85rem + 0.2vw, 0.975rem);
+      --text-lg: clamp(1rem, 0.9rem + 0.5vw, 1.2rem);
+      --text-xl: clamp(1.25rem, 1rem + 1vw, 1.6rem);
+      --space-1:0.25rem;--space-2:0.5rem;--space-3:0.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;
+      --radius-sm:0.3rem;--radius-md:0.45rem;--radius-lg:0.75rem;--radius-xl:0.9rem;--radius-full:999px;
+      --shadow-sm:0 1px 3px rgba(14,22,34,0.07);--shadow-md:0 4px 16px rgba(14,22,34,0.09);
+      --font-body:'Inter',system-ui,sans-serif;
+    }
+    :root,[data-theme="light"]{
+      --color-bg:#f2f1ec;--color-surface:#faf9f6;--color-surface-2:#f3f2ed;--color-surface-3:#eae8e2;
+      --color-border:#d5d0c7;--color-divider:#e2ddd5;--color-text:#1e1b15;--color-text-muted:#65625b;--color-text-faint:#9a958d;
+      --color-primary:#046c73;--color-primary-2:#0f8f98;--color-primary-soft:rgba(4,108,115,0.10);
+      --color-orange:#c96a10;--color-blue:#2b6ab5;--color-green:#3a7828;--color-red:#a83850;
+      --plot-bg:#ffffff;--plot-grid:#dde4ef;--plot-axis:#6b747f;
+    }
+    [data-theme="dark"]{
+      --color-bg:#131415;--color-surface:#1a1c1e;--color-surface-2:#1f2124;--color-surface-3:#272a2e;
+      --color-border:#333840;--color-divider:#282d33;--color-text:#e8eaeb;--color-text-muted:#b0b7bd;--color-text-faint:#858d95;
+      --color-primary:#68aeb8;--color-primary-2:#86cad2;--color-primary-soft:rgba(104,174,184,0.13);
+      --color-orange:#efaa52;--color-blue:#7fb2ec;--color-green:#84be68;--color-red:#e38c9e;
+      --plot-bg:#16181b;--plot-grid:#2e3540;--plot-axis:#b8c1cb;
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.3);--shadow-md:0 4px 16px rgba(0,0,0,0.3);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;min-height:100%;}
+    body{font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);line-height:1.45;}
+    button,input,select{font:inherit;}
+    button{cursor:pointer;}
+    .app{max-width:1900px;margin:0 auto;padding:var(--space-3);display:grid;gap:var(--space-3);}
+    .header{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-4);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);}
+    .brand{display:flex;gap:var(--space-3);align-items:center;}
+    .logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--color-primary-soft);color:var(--color-primary);border:1px solid rgba(4,108,115,0.15);flex-shrink:0;}
+    .logo svg{width:22px;height:22px;}
+    h1{font-size:var(--text-lg);line-height:1.1;margin:0;font-weight:700;}
+    .subtitle{color:var(--color-text-muted);font-size:var(--text-sm);margin:0;}
+    .toolbar{display:flex;gap:var(--space-2);align-items:center;}
+    .theme-toggle,.btn,.segmented button{
+      height:34px;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);
+      color:var(--color-text);padding:0 var(--space-3);font-size:var(--text-sm);transition:all 150ms ease;white-space:nowrap;
+    }
+    .btn:hover,.theme-toggle:hover,.segmented button:hover{background:var(--color-surface-3);}
+    .btn-primary{background:var(--color-primary);color:#fff;border-color:transparent;}
+    .btn-primary:hover{background:var(--color-primary-2);background:color-mix(in srgb,var(--color-primary) 88%,black);}
+    .btn-danger{color:var(--color-red);border-color:transparent;background:transparent;}
+    .btn-danger:hover{background:rgba(168,56,80,0.08);}
+    .layout{display:grid;grid-template-columns:380px minmax(0,1fr);gap:var(--space-3);align-items:start;}
+    .sidebar,.main-panel,.plot-card,.modal-content{
+      background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);box-shadow:var(--shadow-sm);
+    }
+    .sidebar{padding:var(--space-3);display:grid;gap:var(--space-3);position:sticky;top:var(--space-3);max-height:calc(100vh - 1.5rem);overflow-y:auto;}
+    .sidebar section{display:grid;gap:var(--space-2);}
+    .sidebar hr{border:none;border-top:1px solid var(--color-divider);margin:0;}
+    .section-label{font-size:var(--text-xs);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--color-text-faint);}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);}
+    .section-title h2{font-size:var(--text-base);margin:0;font-weight:600;}
+    .muted{color:var(--color-text-muted);}
+    .control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-2);}
+    .control-grid.three{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .field{display:grid;gap:0.25rem;}
+    .field label{font-size:var(--text-xs);color:var(--color-text-muted);font-weight:500;}
+    .field input,.field select{
+      width:100%;height:34px;padding:0 0.7rem;border-radius:var(--radius-md);border:1px solid var(--color-border);
+      background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-sm);
+    }
+    .field input:focus,.field select:focus{outline:2px solid var(--color-primary);outline-offset:1px;}
+    .button-row{display:flex;flex-wrap:wrap;gap:var(--space-2);}
+    .segmented{display:inline-flex;gap:3px;padding:3px;border-radius:var(--radius-lg);background:var(--color-surface-2);border:1px solid var(--color-border);}
+    .segmented button{height:28px;padding:0 var(--space-2);border:none;background:transparent;border-radius:calc(var(--radius-lg) - 2px);}
+    .segmented button.active{background:var(--color-primary);color:#fff;}
+    .segmented button:hover:not(.active){background:var(--color-surface-3);}
+    .chips{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;}
+    .chip{padding:0.2rem 0.55rem;border-radius:var(--radius-full);background:var(--color-surface-2);border:1px solid var(--color-border);color:var(--color-text-muted);font-size:var(--text-xs);}
+    .main-panel{padding:var(--space-3);display:grid;gap:var(--space-3);}
+    .canvas-toolbar{display:flex;flex-wrap:wrap;gap:var(--space-2);justify-content:space-between;align-items:center;margin-bottom:var(--space-2);}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-2);}
+    .stat{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-2) var(--space-3);}
+    .stat .label{font-size:var(--text-xs);color:var(--color-text-muted);}
+    .stat .value{font-size:1rem;font-weight:700;margin-top:0.1rem;}
+    canvas{width:100%;display:block;}
+    #tutorialOverlay{position:fixed;inset:0;pointer-events:none;z-index:8000;}
+    .tut-highlight{outline:3px solid var(--color-primary);outline-offset:4px;border-radius:var(--radius-md);transition:outline .3s;}
+    #tutorialPanel{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:8100;background:var(--color-surface);border:1.5px solid var(--color-primary);border-radius:var(--radius-lg);padding:18px 22px 14px;max-width:480px;width:90vw;box-shadow:var(--shadow-lg);pointer-events:all;display:none;}
+    #tutorialPanel h4{margin:0 0 6px;font-size:1rem;color:var(--color-primary);}
+    #tutorialPanel p{margin:0 0 12px;font-size:var(--text-sm);line-height:1.55;color:var(--color-text);}
+    .tut-footer{display:flex;align-items:center;gap:8px;}
+    .tut-step-counter{font-size:var(--text-xs);color:var(--color-text-muted);margin-right:auto;}
+    .tut-btn{height:28px;padding:0 14px;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);cursor:pointer;}
+    .tut-btn-primary{background:var(--color-primary);color:#fff;border-color:var(--color-primary);}
+    .tut-progress{height:3px;background:color-mix(in srgb,var(--color-primary) 20%,transparent);border-radius:2px;margin-bottom:12px;}
+    .tut-progress-bar{height:100%;background:var(--color-primary);border-radius:2px;transition:width .3s;}
+
+    #editorCanvas{height:min(60vh,700px);border-radius:var(--radius-lg);border:1px solid var(--color-border);}
+    .plots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-3);}
+    .plots-header{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-1) 0;}
+    .plot-card{padding:var(--space-2) var(--space-3);display:grid;gap:var(--space-2);}
+    .plot-head{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);}
+    .zoom-out-btn{font-size:10px;padding:1px 7px;height:20px;border-radius:4px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);cursor:pointer;display:none;}
+    .zoom-out-btn.active{display:inline-block;}
+    .plot-canvas{user-select:none;}
+    .plot-head h3{margin:0;font-size:var(--text-sm);font-weight:600;}
+    .plot-meta{font-size:var(--text-xs);color:var(--color-text-muted);}
+    .plot-canvas{height:280px;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--plot-bg);cursor:zoom-in;}
+    .legend{display:flex;flex-wrap:wrap;gap:var(--space-2);font-size:var(--text-xs);color:var(--color-text-muted);}
+    .legend span{display:inline-flex;align-items:center;gap:0.3rem;}
+    .swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+    .info-box{background:var(--color-surface-2);border:1px solid var(--color-divider);border-radius:var(--radius-lg);padding:var(--space-2) var(--space-3);}
+    .coords{display:grid;gap:0.3rem;font-size:var(--text-sm);}
+    .coords code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--color-surface-3);padding:0.15rem 0.35rem;border-radius:0.3rem;font-size:var(--text-xs);}
+    .modal{position:fixed;inset:0;background:rgba(8,10,14,0.5);display:none;align-items:center;justify-content:center;padding:var(--space-4);z-index:50;}
+    .modal.open{display:flex;}
+    .modal-content{width:min(1200px,96vw);padding:var(--space-4);}
+    .modal-content .plot-canvas{height:min(78vh,760px);cursor:zoom-out;}
+    .hint{font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.5;}
+    .small{font-size:var(--text-sm);}
+    .sel-badge{display:inline-flex;align-items:center;padding:0.15rem 0.5rem;border-radius:var(--radius-full);background:var(--color-primary-soft);color:var(--color-primary);font-size:var(--text-xs);font-weight:600;}
+    @media(max-width:1200px){
+      .layout{grid-template-columns:1fr;}
+      .sidebar{position:static;max-height:none;}
+      .plots{grid-template-columns:1fr;}
+      .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    }
+    @media(max-width:700px){
+      .control-grid,.control-grid.three{grid-template-columns:1fr;}
+      .stats-grid{grid-template-columns:1fr;}
+      .header{flex-direction:column;align-items:flex-start;}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 45 24 25l11 16 19-26"/>
+            <path d="M10 53h44"/>
+            <circle cx="24" cy="25" r="4" fill="currentColor" stroke="none"/>
+            <circle cx="35" cy="41" r="4" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Seismic Acquisition</h1>
+          <p class="subtitle">Seismic synthetic · geometry &amp; model editor</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button id="tutorialBtn" style="height:32px;padding:0 14px;border-radius:var(--radius-md);border:1px solid var(--color-primary);background:transparent;color:var(--color-primary);font-size:var(--text-xs);cursor:pointer;font-weight:600;">🎓 Tutorial</button>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">Theme</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <section>
+          <div class="section-title">
+            <span class="section-label">View &amp; tools</span>
+            <span class="sel-badge" id="selectionChip">0 selected</span>
+          </div>
+          <div class="field">
+            <label>View</label>
+            <div id="viewToggleBar" class="segmented" role="tablist">
+              <button data-view="xy">XY</button>
+              <button class="active" data-view="z">Depth</button>
+            </div>
+          </div>
+
+        </section>
+
+        <hr/>
+
+        <section>
+          <span class="section-label">Shots</span>
+          <div class="control-grid">
+            <div class="field">
+              <label>Inlines</label>
+              <input id="shotInlinesInput" type="number" min="1" max="1000" step="1" value="20" />
+            </div>
+            <div class="field">
+              <label>Crosslines</label>
+              <input id="shotXlinesInput" type="number" min="1" max="100" step="1" value="20" />
+            </div>
+            <div class="field">
+              <label>IL spacing (m)</label>
+              <input id="shotILSpacingInput" type="number" min="10" max="5000" step="10" value="200" />
+            </div>
+            <div class="field">
+              <label>XL spacing (m)</label>
+              <input id="shotXLSpacingInput" type="number" min="10" max="5000" step="10" value="200" />
+            </div>
+          </div>
+          <div class="control-grid" style="margin-top:6px;">
+            <div class="field"><label>Origin X (m)</label><input id="shotOriginX" type="number" step="10" value="0" /></div>
+            <div class="field"><label>Origin Y (m)</label><input id="shotOriginY" type="number" step="10" value="0" /></div>
+            <div class="field"><label>Origin Z (m)</label><input id="shotOriginZ" type="number" step="10" value="0" /></div>
+          </div>
+          <div class="button-row">
+            <button class="btn btn-primary" id="generateShotsBtn">Generate shots</button>
+            <button class="btn btn-primary" id="appendShotsBtn">Add shots</button>
+          </div>
+          <div style="margin-top:8px;border-top:1px solid var(--color-border);padding-top:6px;">
+            <label style="font-size:11px;color:var(--color-text-muted);display:block;margin-bottom:4px;">Move selected shots (or all if none selected)</label>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:11px;">ΔX</span><input id="shotDX" type="number" step="10" value="0" style="width:64px;height:22px;padding:0 0.3rem;" />
+              <span style="font-size:11px;">ΔY</span><input id="shotDY" type="number" step="10" value="0" style="width:64px;height:22px;padding:0 0.3rem;" />
+              <span style="font-size:11px;">ΔZ</span><input id="shotDZ" type="number" step="10" value="0" style="width:64px;height:22px;padding:0 0.3rem;" />
+              <button class="btn" id="moveShotsBtn" style="height:22px;padding:0 0.6rem;">Apply</button>
+            </div>
+          </div>
+        </section>
+
+        <hr/>
+
+        <section>
+          <span class="section-label">Receivers</span>
+          <div class="control-grid">
+            <div class="field">
+              <label>Inlines</label>
+              <input id="receiverInlinesInput" type="number" min="1" max="100" step="1" value="1" />
+            </div>
+            <div class="field">
+              <label>Crosslines</label>
+              <input id="receiverXlinesInput" type="number" min="1" max="100" step="1" value="1" />
+            </div>
+            <div class="field">
+              <label>IL spacing (m)</label>
+              <input id="receiverILSpacingInput" type="number" min="10" max="5000" step="10" value="200" />
+            </div>
+            <div class="field">
+              <label>XL spacing (m)</label>
+              <input id="receiverXLSpacingInput" type="number" min="10" max="5000" step="10" value="200" />
+            </div>
+          </div>
+          <div class="control-grid" style="margin-top:6px;">
+            <div class="field"><label>Origin X (m)</label><input id="recOriginX" type="number" step="10" value="0" /></div>
+            <div class="field"><label>Origin Y (m)</label><input id="recOriginY" type="number" step="10" value="0" /></div>
+            <div class="field"><label>Origin Z (m)</label><input id="recOriginZ" type="number" step="10" value="0" /></div>
+          </div>
+          <div class="button-row">
+            <button class="btn btn-primary" id="generateSquareBtn">Generate receivers</button>
+            <button class="btn btn-primary" id="appendReceiversBtn">Add receivers</button>
+            <button class="btn" id="randomBottomBtn">Random depth</button>
+          </div>
+          <div style="margin-top:8px;border-top:1px solid var(--color-border);padding-top:6px;">
+            <label style="font-size:11px;color:var(--color-text-muted);display:block;margin-bottom:4px;">Move selected receivers (or all if none selected)</label>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+              <span style="font-size:11px;">ΔX</span><input id="recDX" type="number" step="10" value="0" style="width:64px;height:22px;padding:0 0.3rem;" />
+              <span style="font-size:11px;">ΔY</span><input id="recDY" type="number" step="10" value="0" style="width:64px;height:22px;padding:0 0.3rem;" />
+              <span style="font-size:11px;">ΔZ</span><input id="recDZ" type="number" step="10" value="0" style="width:64px;height:22px;padding:0 0.3rem;" />
+              <button class="btn" id="moveReceiversBtn" style="height:22px;padding:0 0.6rem;">Apply</button>
+            </div>
+          </div>
+        </section>
+
+        <hr/>
+
+        <section id="layersPanel">
+          <span class="section-label">Model</span>
+          <div class="control-grid">
+            <div class="field">
+              <label>V water (m/s)</label>
+              <input id="waterVelInput" type="number" min="500" max="4000" step="10" value="1500" />
+            </div>
+            <div class="field">
+              <label>Water bottom (m)</label>
+              <input id="waterBottomInput" type="number" min="100" max="6000" step="10" value="1000" />
+            </div>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--color-text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:.5rem;">Reflectors</div>
+          <div id="layerList" style="display:grid;gap:4px;margin-top:4px;"></div>
+          <div class="button-row" style="margin-top:6px;">
+            <button class="btn" id="addLayerBtn">+ Layer</button>
+          </div>
+          <div style="font-size:var(--text-xs);color:var(--color-text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:.6rem;">AVO</div>
+          <div class="control-grid" style="margin-top:4px;">
+            <div class="field"><label>Intercept R₀</label>
+              <input id="avoR0Input" type="number" min="-1" max="1" step="0.01" value="0.1" /></div>
+            <div class="field"><label>Gradient G</label>
+              <input id="avoGInput" type="number" min="-2" max="2" step="0.05" value="0" /></div>
+          </div>
+        </section>
+
+        <hr/>
+
+        <hr/>
+
+        <section class="info-box">
+          <div class="section-title"><span class="section-label">Selection</span></div>
+          <div class="coords" id="selectionInfo"><div class="muted hint">Nothing selected.</div></div>
+        </section>
+      </aside>
+
+      <main class="main-panel">
+        <section>
+          <div class="canvas-toolbar">
+            <div>
+              <div class="section-title" style="margin-bottom:2px;"><h2 style="font-size:var(--text-base);font-weight:600;">Geometry editor</h2></div>
+              <p class="hint" style="margin:0;">Drag nodes to move · Ctrl+click to multi-select · Box-drag on empty space to select region · Z view: drag WB/reflector lines</p>
+            </div>
+            <div class="chips">
+              <span class="chip">Shots: <strong id="shotCount">1</strong></span>
+              <span class="chip">Receivers: <strong id="receiverCount">1</strong></span>
+              <span class="chip">WB: <strong id="wbChip">1000 m</strong></span>
+              <span class="chip">Refl: <strong id="reflChip">2000 m</strong></span>
+              <span class="chip" style="color:var(--color-green);">IL cov: <strong id="ilCovChip">— m</strong></span>
+              <span class="chip" style="color:var(--color-green);">XL cov: <strong id="xlCovChip">— m</strong></span>
+              <button id="coverageToggleBtn" class="btn" style="height:24px;padding:0 0.6rem;font-size:var(--text-xs);border-color:var(--color-green);color:var(--color-green);">Coverage on</button>
+            </div>
+          </div>
+          <div class="editor-wrap">
+            <div class="button-row" style="margin-bottom:10px; justify-content:flex-end; gap:8px;">
+              <button class="btn btn-danger" id="removeSelectedBtn">Remove selected</button>
+              <button class="btn" id="resetBtn">Reset default</button>
+              <button class="btn btn-primary" id="setCurrentAsInitialBtn">Set as initial</button>
+            </div>
+            <canvas id="editorCanvas" width="1400" height="760" aria-label="Geometry editor"></canvas>
+          </div>
+        </section>
+
+        <section class="stats-grid">
+          <div class="stat"><div class="label" id="meanOffsetLabel">Mean 3D offset</div><div class="value" id="meanOffsetStat">0 m</div></div>
+          <div class="stat"><div class="label" id="maxOffsetLabel">Max 3D offset</div><div class="value" id="maxOffsetStat">0 m</div></div>
+          <div class="stat"><div class="label">WB time at mean offset</div><div class="value" id="wbTimeStat">0 ms</div></div>
+          <div class="stat"><div class="label">Reflector time at mean offset</div><div class="value" id="reflTimeStat">0 ms</div></div>
+        </section>
+
+        <section class="plots" id="plotSection">
+          <div style="grid-column:1/-1;display:grid;gap:var(--space-2);">
+            <!-- Row 1: display controls -->
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);">
+              <span class="section-label" style="flex:1;min-width:80px;">Seismic plots</span>
+              <span class="chip" style="display:flex;align-items:center;gap:0.4rem;">
+                <label style="font-size:var(--text-xs);color:var(--color-text-muted);">X-axis</label>
+                <select id="xAxisSelect" style="height:24px;border-radius:6px;border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);padding:0 0.4rem;font-size:var(--text-xs);">
+                  <option value="offset">Offset</option>
+                  <option value="shotx">Shot X</option>
+                  <option value="shoty">Shot Y</option>
+                  <option value="recx">Rec X</option>
+                  <option value="recy">Rec Y</option>
+                  <option value="cmpx">CMP X</option>
+                  <option value="cmpy">CMP Y</option>
+                </select>
+              </span>
+              <span class="chip" style="display:flex;align-items:center;gap:0.4rem;">
+                X range
+                <input type="number" id="xMinInput" placeholder="min" style="width:62px;height:24px;padding:0 0.35rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);" />
+                <span style="font-size:var(--text-xs);">–</span>
+                <input type="number" id="xMaxInput" placeholder="max" style="width:62px;height:24px;padding:0 0.35rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);" />
+                <span style="font-size:var(--text-xs);">m</span>
+              </span>
+              <span class="chip" style="display:flex;align-items:center;gap:0.4rem;">
+                T range
+                <input type="number" id="tMinInput" placeholder="0" style="width:62px;height:24px;padding:0 0.35rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);" />
+                <span style="font-size:var(--text-xs);">–</span>
+                <input type="number" id="maxTimeInput" placeholder="auto" min="0" max="60000" step="100" value="1800" style="width:62px;height:24px;padding:0 0.35rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);" />
+                <span style="font-size:var(--text-xs);">ms</span>
+              </span>
+              <span class="chip" style="display:flex;align-items:center;gap:0.4rem;">
+                Gain
+                <input type="range" id="gainInput" min="0.1" max="4" step="0.1" value="1" style="width:70px;accent-color:var(--color-primary);cursor:pointer;">
+                <span id="gainLabel" style="font-size:var(--text-xs);min-width:2.8rem;">×1.0</span>
+              </span>
+              <span class="chip" style="display:flex;align-items:center;gap:0.4rem;">
+                <button id="nmoBtn" style="height:24px;padding:0 0.6rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);cursor:pointer;">NMO off</button>
+              </span>
+              <span class="chip" style="display:flex;align-items:center;gap:0.4rem;">
+                <button id="ghostBtn" style="height:24px;padding:0 0.6rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);cursor:pointer;">Ghosts off</button>
+              </span>
+            </div>
+            <!-- Row 2: Gather filter -->
+            <div id="gatherFilterBar" style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);background:var(--color-primary-soft);border:1px solid var(--color-primary-border);border-radius:var(--radius-lg);">
+              <span style="font-size:var(--text-xs);font-weight:700;color:var(--color-primary);white-space:nowrap;letter-spacing:0.04em;text-transform:uppercase;">Gather filter</span>
+              <div id="gatherFilterRows" style="display:flex;flex-direction:column;gap:4px;"></div>
+              <button id="addGatherFilterBtn" style="height:24px;padding:0 0.6rem;border-radius:var(--radius-md);border:1px dashed var(--color-primary-border);background:transparent;color:var(--color-primary);font-size:var(--text-xs);cursor:pointer;">+ Add filter</button>
+              <span id="gatherFilterBadge" style="display:none;font-size:var(--text-xs);color:var(--color-primary);font-weight:600;padding:0.1rem 0.5rem;background:var(--color-surface);border:1px solid var(--color-primary-border);border-radius:var(--radius-full);"></span>
+            </div>
+          </div>
+          <article class="plot-card">
+            <div class="plot-head"><h3>Initial seismic</h3><span class="plot-meta" id="plotXMeta">Offset × Travel time</span></div>
+            <canvas class="plot-canvas" id="plotInitial" width="520" height="280"></canvas>
+          </article>
+          <article class="plot-card">
+            <div class="plot-head"><h3>Current seismic</h3><span class="plot-meta">Click to enlarge</span></div>
+            <canvas class="plot-canvas" id="plotUpdated" width="520" height="280"></canvas>
+          </article>
+          <article class="plot-card">
+            <div class="plot-head"><h3>Difference</h3><span class="plot-meta">Current − initial</span></div>
+            <canvas class="plot-canvas" id="plotDiff" width="520" height="280"></canvas>
+          </article>
+        </section>
+
+        <section class="plots" id="analysisSection" style="grid-column:1/-1;">
+          <div class="plots-header" style="grid-column:1/-1;">
+            <span class="section-label" style="flex:1;">Geometry analysis</span>
+          </div>
+
+          <!-- Rose plot + CMP fold side by side -->
+          <article class="plot-card">
+            <div class="plot-head"><h3>Azimuth &amp; offset rose</h3><span class="plot-meta">Source–receiver azimuths</span></div>
+            <canvas class="plot-canvas" id="plotRose" width="520" height="280"></canvas>
+          </article>
+          <article class="plot-card">
+            <div class="plot-head"><h3>CMP fold map</h3><span class="plot-meta">Traces per bin &nbsp;|&nbsp; Bin:&nbsp;<input id="cmpBinInput" type="number" min="10" max="2000" step="10" value="100" style="width:56px;height:20px;padding:0 0.3rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);" />&nbsp;m</span></div>
+            <canvas class="plot-canvas" id="plotCMP" width="520" height="280"></canvas>
+          </article>
+
+          <!-- Export / Import card -->
+          <article class="plot-card" id="importExportPanel">
+            <div class="plot-head"><h3>Import / Export</h3><span class="plot-meta">CSV in meters</span></div>
+            <div style="display:grid;gap:var(--space-2);margin-top:0.25rem;">
+              <div class="button-row">
+                <button class="btn btn-primary" id="exportGeomBtn">⬇ Export CSV</button>
+                <label class="btn" style="cursor:pointer;">⬆ Import CSV<input type="file" id="importGeomFile" accept=".csv,.txt" style="display:none;"/></label>
+              </div>
+              <p class="hint">Export: <code>type,x,y,z</code> — Import columns: <code>type, x, y, z</code> (shot/receiver) or <code>shot_x, shot_y, shot_z, rec_x, rec_y, rec_z</code> (pair rows).</p>
+              <div id="importStatus" class="hint" style="color:var(--color-green);min-height:1.2em;"></div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="editorTooltip" style="position:fixed;display:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--color-text);pointer-events:none;z-index:9999;line-height:1.6;box-shadow:var(--shadow-sm);white-space:pre;"></div>
+  <div class="modal" id="plotModal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="plot-head" style="margin-bottom:12px;">
+        <h3 id="modalTitle">Plot</h3><span style="font-size:10px;color:var(--color-text-muted);margin-left:8px;">Drag to zoom · Right-click to zoom out</span>
+        <button class="zoom-out-btn active" id="modalZoomOutBtn" style="display:none;">⟲ Zoom out</button>
+        <button class="btn" id="closeModalBtn">Close</button>
+      </div>
+      <canvas class="plot-canvas" id="modalCanvas" width="1100" height="760"></canvas>
+    </div>
+  </div>
+
+  
+  <div id="tutorialOverlay"></div>
+  <div id="tutorialPanel">
+    <div class="tut-progress"><div class="tut-progress-bar" id="tutProgressBar"></div></div>
+    <h4 id="tutTitle"></h4>
+    <p id="tutBody"></p>
+    <div class="tut-footer">
+      <span class="tut-step-counter" id="tutCounter"></span>
+      <button class="tut-btn" id="tutSkipBtn">Skip</button>
+      <button class="tut-btn" id="tutBackBtn">← Back</button>
+      <button class="tut-btn tut-btn-primary" id="tutNextBtn">Next →</button>
+    </div>
+  </div>
+<script>
+    (() => {
+      const editorCanvas = document.getElementById('editorCanvas');
+      const ectx = editorCanvas.getContext('2d');
+      const plotInitial = document.getElementById('plotInitial');
+      const plotUpdated = document.getElementById('plotUpdated');
+      const plotDiff = document.getElementById('plotDiff');
+      const modal = document.getElementById('plotModal');
+      const modalCanvas = document.getElementById('modalCanvas');
+      const modalCtx = modalCanvas.getContext('2d');
+      const selectionInfo = document.getElementById('selectionInfo');
+            const selectionChip = document.getElementById('selectionChip');
+      const shotCountEl = document.getElementById('shotCount');
+      const receiverCountEl = document.getElementById('receiverCount');
+      const wbChip = document.getElementById('wbChip');
+      const reflChip = document.getElementById('reflChip');
+
+      const waterBottomInput = document.getElementById('waterBottomInput');
+      const waterVelInput = document.getElementById('waterVelInput');
+      const receiverCountInput = document.getElementById('receiverCountInput');
+      const receiverSpacingInput = document.getElementById('receiverSpacingInput');
+      const shotCountInput = document.getElementById('shotCountInput');
+      const shotSpacingInput = document.getElementById('shotSpacingInput');
+      const meanOffsetStat = document.getElementById('meanOffsetStat');
+      const maxOffsetStat = document.getElementById('maxOffsetStat');
+      const wbTimeStat = document.getElementById('wbTimeStat');
+      const reflTimeStat = document.getElementById('reflTimeStat');
+
+      const state = {
+        view: 'z',
+        tool: 'move',
+        shots: [],
+        receivers: [],
+        waterBottom: 1000,
+        waterVelocity: 1500,
+        selected: new Set(),
+        drag: null,
+        selectionBox: null,
+        lineMeasure: null,
+        refConfig: null,
+        initialModel: null,
+        modalPlot: null,
+        lastHoveredLine: null,
+        xAxis: 'offset',
+        gain: 1,
+        nmoOn: false,
+        layers: [{depth:2000, velocity:2200}]
+      };
+
+      const history = [];
+      const MAX_HISTORY = 50;
+      function pushHistory() {
+        history.push(deepClone({ shots: state.shots, receivers: state.receivers,
+          waterBottom: state.waterBottom, layers: state.layers }));
+        if (history.length > MAX_HISTORY) history.shift();
+      }
+      function undoHistory() {
+        if (!history.length) return;
+        const snap = history.pop();
+        state.shots = snap.shots; state.receivers = snap.receivers;
+        state.waterBottom = snap.waterBottom; state.layers = snap.layers || state.layers;
+        syncInputs(); renderAll();
+      }
+
+      let timeSamples = 3000;
+      const dt = 0.002;
+      function updateTimeSamples() {
+        const ms = clamp(Number(document.getElementById('maxTimeInput')?.value)||1800, 500, 60000);
+        timeSamples = Math.round(ms / (dt * 1000));
+      }
+      const pulseHalf = 24;
+      const baseDepth = 2000;
+      let pulse = [];
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+      function uid(prefix) { return prefix + '-' + Math.random().toString(36).slice(2, 9); }
+      function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+      function lerp(a, b, t) { return a + (b - a) * t; }
+      function dist3(a, b) { const dx=a.x-b.x, dy=a.y-b.y, dz=(a.z??0)-(b.z??0); return Math.hypot(dx,dy,dz); }
+      function fmt(v, n=0) { return Number(v).toFixed(n); }
+      function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+      function themeVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+
+      // ── Layer list UI ────────────────────────────────────────────────────
+      function renderLayerList() {
+        const el = document.getElementById('layerList');
+        if (!el) return;
+        el.innerHTML = '';
+        state.layers.forEach((layer, i) => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:4px;align-items:end;';
+          row.innerHTML = `
+            <div class="field"><label>Depth (m)</label>
+              <input type="number" min="200" max="12000" step="10" value="${Math.round(layer.depth)}"
+                style="width:100%;height:28px;padding:0 0.4rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);"
+                data-layer="${i}" data-field="depth" /></div>
+            <div class="field"><label>V (m/s)</label>
+              <input type="number" min="200" max="8000" step="10" value="${Math.round(layer.velocity)}"
+                style="width:100%;height:28px;padding:0 0.4rem;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);color:var(--color-text);font-size:var(--text-xs);"
+                data-layer="${i}" data-field="velocity" /></div>
+            <button data-layer="${i}" class="btn btn-danger" style="height:28px;padding:0 0.5rem;align-self:end;">✕</button>`;
+          el.appendChild(row);
+        });
+        // wire inputs
+        el.querySelectorAll('input').forEach(inp => {
+          inp.addEventListener('change', () => {
+            const i = +inp.dataset.layer, field = inp.dataset.field;
+            pushHistory();
+            state.layers[i][field] = parseFloat(inp.value);
+            state.layers.sort((a,b) => a.depth - b.depth);
+            renderLayerList();
+            renderAll();
+          });
+        });
+        el.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            pushHistory();
+            state.layers.splice(+btn.dataset.layer, 1);
+            renderLayerList(); renderAll();
+          });
+        });
+      }
+      document.getElementById('addLayerBtn').addEventListener('click', () => {
+        pushHistory();
+        const lastDepth = state.layers.length ? state.layers[state.layers.length-1].depth : state.waterBottom;
+        const lastVel   = state.layers.length ? state.layers[state.layers.length-1].velocity : 2200;
+        state.layers.push({depth: lastDepth + 500, velocity: lastVel + 300});
+        renderLayerList(); renderAll();
+      });
+      document.getElementById('avoR0Input').addEventListener('input', () => refreshPlots());
+      document.getElementById('avoGInput').addEventListener('input',  () => refreshPlots());
+
+      // ── NMO button ────────────────────────────────────────────────────────
+      document.getElementById('maxTimeInput').addEventListener('change', () => {
+        updateTimeSamples();
+        buildPulse();
+        renderAll();
+      });
+      document.getElementById('tMinInput').addEventListener('change', () => refreshPlots());
+      document.getElementById('ghostBtn').addEventListener('click', () => {
+        state.ghosts = !state.ghosts;
+        document.getElementById('ghostBtn').textContent = state.ghosts ? 'Ghosts on' : 'Ghosts off';
+        document.getElementById('ghostBtn').style.background = state.ghosts ? 'var(--color-primary)' : '';
+        document.getElementById('ghostBtn').style.color = state.ghosts ? '#fff' : '';
+        document.getElementById('ghostBtn').style.borderColor = state.ghosts ? 'var(--color-primary)' : 'var(--color-border)';
+        autoSetTimeRange();
+        refreshPlots();
+      });
+
+      document.getElementById('nmoBtn').addEventListener('click', () => {
+        state.nmoOn = !state.nmoOn;
+        document.getElementById('nmoBtn').textContent = state.nmoOn ? 'NMO on' : 'NMO off';
+        document.getElementById('nmoBtn').style.background = state.nmoOn ? 'var(--color-primary)' : 'var(--color-surface-2)';
+        document.getElementById('nmoBtn').style.color = state.nmoOn ? '#fff' : 'var(--color-text)';
+        refreshPlots();
+      });
+
+      // ── RMS velocity for NMO ─────────────────────────────────────────────
+      function computeVRMS(layers, wb, vw) {
+        if (!layers || !layers.length) return vw;
+        // Use deepest reflector for a single vRMS
+        let tTotal = 0, vRMS2 = 0;
+        // Water leg (two-way to WB approximation)
+        const twat = 2 * wb / vw;
+        vRMS2 += vw*vw * twat; tTotal += twat;
+        for (let i = 0; i < layers.length; i++) {
+          const top = i === 0 ? wb : layers[i-1].depth;
+          const bot = layers[i].depth;
+          const dz  = Math.max(bot - top, 0);
+          const v   = layers[i].velocity;
+          const dt2 = 2 * dz / v;
+          vRMS2 += v*v * dt2; tTotal += dt2;
+        }
+        return Math.sqrt(vRMS2 / Math.max(tTotal, 1e-9));
+      }
+
+      function buildPulse() {
+        pulse = [];
+        const f = 18;
+        for (let i = -pulseHalf; i <= pulseHalf; i++) {
+          const t = i * dt;
+          const a = (1 - 2 * Math.PI * Math.PI * f * f * t * t) * Math.exp(-Math.PI * Math.PI * f * f * t * t);
+          pulse.push(a);
+        }
+        // Apply Hann window to reduce sidelobe intensity
+        const pLen = pulse.length;
+        for (let i = 0; i < pLen; i++) {
+          const w = 0.5 * (1 - Math.cos(2 * Math.PI * i / (pLen - 1)));
+          pulse[i] *= w;
+        }
+      }
+
+      function generateSquareGeometry(inlines=4, xlines=4, ilSpacing=200, xlSpacing=200, depth=1000, ox=0, oy=0, oz=0) {
+        inlines=Math.max(1,Math.floor(inlines)); xlines=Math.max(1,Math.floor(xlines));
+        const receivers=[];
+        for(let iy=0;iy<xlines;iy++) for(let ix=0;ix<inlines;ix++)
+          receivers.push({id:uid('r'),type:'receiver',x:ox+ix*ilSpacing,y:oy+iy*xlSpacing,z:oz});
+        return {receivers};
+      }
+      function generateShotsGeometry(inlines=1, xlines=1, ilSpacing=200, xlSpacing=200, depth=0, ox=0, oy=0, oz=0) {
+        inlines=Math.max(1,Math.floor(inlines)); xlines=Math.max(1,Math.floor(xlines));
+        const shots=[];
+        for(let iy=0;iy<xlines;iy++) for(let ix=0;ix<inlines;ix++)
+          shots.push({id:uid('s'),type:'shot',x:ox+ix*ilSpacing,y:oy+iy*xlSpacing,z:oz});
+        return {shots};
+      }
+
+      function setDefaultState() {
+        const geom  = generateSquareGeometry(1,1,200,200,0,0,0,1000);
+        const shots = generateShotsGeometry(20,20,200,200,0,-2000,-2000,0);
+        state.shots       = shots.shots;
+        state.receivers   = geom.receivers;
+        state.waterBottom   = 1000;
+        state.waterVelocity = 1500;
+        state.layers  = [{depth:2000, velocity:2200}];
+        state.ghosts  = false;
+        state.selected     = new Set();
+        state.gatherFilter = null;
+        state.gatherFilters = [];
+        state.showCoverage  = true;
+        state._lastZClick   = null;
+        setInitialFromCurrent(true);
+        state.refConfig = deepClone({shots:state.shots,receivers:state.receivers,waterBottom:state.waterBottom});
+        renderLayerList();
+      }
+
+      function setInitialFromCurrent(silent = false) {
+        state.initialModel = deepClone({
+          shots: state.shots, receivers: state.receivers,
+          waterBottom: state.waterBottom, waterVelocity: state.waterVelocity,
+          layers: state.layers
+        });
+        // Reset refConfig so ghost markers disappear — reappear only on next move
+        state.refConfig = deepClone({ shots: state.shots, receivers: state.receivers,
+          waterBottom: state.waterBottom, layers: state.layers });
+        if (!silent) renderAll();
+      }
+
+      function syncInputs() {
+        waterBottomInput.value = Math.round(state.waterBottom);
+        waterVelInput.value = Math.round(state.waterVelocity);
+        shotCountEl.textContent = state.shots.length;
+        receiverCountEl.textContent = state.receivers.length;
+        wbChip.textContent = Math.round(state.waterBottom) + ' m';
+        if(reflChip) reflChip.textContent = (state.layers[0] ? Math.round(state.layers[0].depth) : '-') + ' m';
+        selectionChip.textContent = state.selected.size + ' selected';
+      }
+
+      function allObjects() { return [...state.shots, ...state.receivers]; }
+      function getObjectById(id) { return allObjects().find(o => o.id === id); }
+
+      function canvasPoint(evt) {
+        const rect = editorCanvas.getBoundingClientRect();
+        return { x: (evt.clientX - rect.left) * (editorCanvas.width / rect.width), y: (evt.clientY - rect.top) * (editorCanvas.height / rect.height), ctrl: evt.ctrlKey || evt.metaKey };
+      }
+
+      function getBounds() {
+        const objs = allObjects();
+        const xs = objs.map(o => o.x), ys = objs.map(o => o.y), zs = objs.map(o => o.z);
+        const pad = 300;
+        const minX = Math.min(...xs, -600) - pad, maxX = Math.max(...xs, 600) + pad;
+        const minY = Math.min(...ys, -600) - pad, maxY = Math.max(...ys, 600) + pad;
+        const maxLayerZ = state.layers?.length ? Math.max(...state.layers.map(l=>l.depth)) : 2000;
+        const minZ = -100, maxZ = Math.max(...zs, maxLayerZ + 600, 2600);
+        return { minX, maxX, minY, maxY, minZ, maxZ };
+      }
+
+      function getViewTransform() {
+        const b = getBounds();
+        const margin = 72;
+        const w = editorCanvas.width - 2 * margin;
+        const h = editorCanvas.height - 2 * margin;
+        if (state.view === 'xy') {
+          const sx = w / (b.maxX - b.minX || 1);
+          const sy = h / (b.maxY - b.minY || 1);
+          // Use independent scales so geometry fills the full rectangle
+          return { b, margin, w, h, sx, sy, s: Math.min(sx, sy), dx: margin, dy: margin, mode: 'xy' };
+        }
+        const sx = w / (b.maxX - b.minX || 1);
+        const sz = h / (b.maxZ - b.minZ || 1);
+        return { b, margin, w, h, sx, sy: sz, s: Math.min(sx, sz), dx: margin, dy: margin, mode: 'z' };
+      }
+
+      function worldToScreen(x, y, z) {
+        const t = getViewTransform();
+        if (state.view === 'xy') {
+          return {
+            x: t.dx + (x - t.b.minX) * t.sx,
+            y: editorCanvas.height - (t.dy + (y - t.b.minY) * t.sy)
+          };
+        }
+        return {
+          x: t.dx + (x - t.b.minX) * t.sx,
+          y: t.dy + (z - t.b.minZ) * t.sy
+        };
+      }
+
+      function screenToWorld(sx, sy, refObj) {
+        const t = getViewTransform();
+        const x = t.b.minX + (sx - t.dx) / t.sx;
+        if (state.view === 'xy') {
+          const y = t.b.minY + ((editorCanvas.height - sy) - t.dy) / t.sy;
+          return { x, y, z: refObj?.z ?? 0 };
+        }
+        const z = t.b.minZ + (sy - t.dy) / t.sy;
+        return { x, y: refObj?.y ?? 0, z };
+      }
+
+      function hitTest(point) {
+        const nodes = allObjects().map(obj=>({obj,p:worldToScreen(obj.x,obj.y,obj.z)}));
+        if (state.view==='z') {
+          const cands=[];
+          for(const item of nodes){
+            const r=item.obj.type==='shot'?16:13;
+            if(Math.hypot(point.x-item.p.x,point.y-item.p.y)<r) cands.push(item.obj);
+          }
+          if(cands.length>0){
+            cands.sort((a,b)=>b.y-a.y); // most-positive Y on top in Z view
+            return{type:'object',object:cands[0],candidates:cands};
+          }
+          // Model lines in Z view
+          const wbY=worldToScreen(0,0,state.waterBottom).y;
+          if(Math.abs(point.y-wbY)<10) return{type:'line',line:'waterBottom'};
+          for(let li=0;li<state.layers.length;li++){
+            const lY=worldToScreen(0,0,state.layers[li].depth).y;
+            if(Math.abs(point.y-lY)<10) return{type:'line',line:'layer',layerIdx:li};
+          }
+          return null;
+        }
+        // XY view — closest object
+        let hit=null,best=Infinity;
+        for(const item of nodes){
+          const r=item.obj.type==='shot'?16:13;
+          const d=Math.hypot(point.x-item.p.x,point.y-item.p.y);
+          if(d<r&&d<best){best=d;hit=item.obj;}
+        }
+        if(hit) return{type:'object',object:hit,candidates:[hit]};
+        // Connection lines
+        const CONN_TOL=8;
+        let bestConn=CONN_TOL,connHit=null;
+        for(const s of state.shots){
+          const sp=worldToScreen(s.x,s.y,s.z);
+          for(const r of state.receivers){
+            const rp=worldToScreen(r.x,r.y,r.z);
+            const dx=rp.x-sp.x,dy=rp.y-sp.y,lenSq=dx*dx+dy*dy;
+            if(lenSq<1) continue;
+            const t=Math.max(0,Math.min(1,((point.x-sp.x)*dx+(point.y-sp.y)*dy)/lenSq));
+            const d=Math.hypot(point.x-sp.x-t*dx,point.y-sp.y-t*dy);
+            if(d<bestConn){bestConn=d;connHit={a:s,b:r,distance:dist3(s,r)};}
+          }
+        }
+        if(connHit) return{type:'line',line:'connection',measure:connHit};
+        return null;
+      }
+
+
+      function updateSelectionInfo() {
+        if (state.lineMeasure) {
+          selectionInfo.innerHTML = `
+            <div><strong>Measured line</strong></div>
+            <div>From: <code>${state.lineMeasure.a.type} ${state.lineMeasure.a.id.slice(-4)}</code></div>
+            <div>To: <code>${state.lineMeasure.b.type} ${state.lineMeasure.b.id.slice(-4)}</code></div>
+            <div>3D distance: <code>${fmt(state.lineMeasure.distance,1)} m</code></div>
+            <div>Δx: <code>${fmt(state.lineMeasure.b.x - state.lineMeasure.a.x,1)} m</code> · Δy: <code>${fmt(state.lineMeasure.b.y - state.lineMeasure.a.y,1)} m</code> · Δz: <code>${fmt(state.lineMeasure.b.z - state.lineMeasure.a.z,1)} m</code></div>
+          `;
+          return;
+        }
+        const sel = [...state.selected].map(getObjectById).filter(Boolean);
+        if (!sel.length) {
+          selectionInfo.innerHTML = '<div class="muted">No object selected.</div>';
+          return;
+        }
+        if (sel.length === 1) {
+          const o = sel[0];
+          selectionInfo.innerHTML = `
+            <div><strong>${o.type === 'shot' ? 'Shot' : 'Receiver'}</strong> <code>${o.id.slice(-4)}</code></div>
+            <div>x: <code>${fmt(o.x,1)} m</code></div>
+            <div>y: <code>${fmt(o.y,1)} m</code></div>
+            <div>z: <code>${fmt(o.z,1)} m</code></div>
+          `;
+          return;
+        }
+        const mx = sel.reduce((a,b)=>a+b.x,0)/sel.length;
+        const my = sel.reduce((a,b)=>a+b.y,0)/sel.length;
+        const mz = sel.reduce((a,b)=>a+b.z,0)/sel.length;
+        selectionInfo.innerHTML = `
+          <div><strong>Multi-selection</strong></div>
+          <div>Count: <code>${sel.length}</code></div>
+          <div>Mean x: <code>${fmt(mx,1)} m</code></div>
+          <div>Mean y: <code>${fmt(my,1)} m</code></div>
+          <div>Mean z: <code>${fmt(mz,1)} m</code></div>
+        `;
+      }
+
+      function setSelection(ids, additive = false) {
+        if (!additive) state.selected = new Set();
+        ids.forEach(id => state.selected.add(id));
+        state.lineMeasure = null;
+        syncInputs();
+        updateSelectionInfo();
+        refreshPlots();
+      }
+
+      function toggleSelection(id) {
+        if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+        state.lineMeasure = null;
+        syncInputs();
+        updateSelectionInfo();
+        refreshPlots();
+      }
+
+      function drawGridAndAxes() {
+        const w = editorCanvas.width, h = editorCanvas.height;
+        ectx.clearRect(0,0,w,h);
+        const bg = ectx.createLinearGradient(0,0,0,h);
+        bg.addColorStop(0, themeVar('--color-surface-2'));
+        bg.addColorStop(1, themeVar('--color-surface'));
+        ectx.fillStyle = bg;
+        ectx.fillRect(0,0,w,h);
+
+        const t = getViewTransform();
+        const m = t.margin;
+        const right = m + t.w, bottom = m + t.h;
+
+        // Grid lines aligned to world ticks
+        ectx.strokeStyle = themeVar('--color-divider');
+        ectx.lineWidth = 1;
+        ectx.setLineDash([3,7]);
+
+        const b = t.b;
+        // X ticks
+        const xRange = state.view === 'xy' ? b.maxX - b.minX : b.maxX - b.minX;
+        const xStep = niceAxisStep(xRange, Math.max(4, Math.floor(t.w / 110)));
+        const xStart = Math.ceil(b.minX / xStep) * xStep;
+        ectx.fillStyle = themeVar('--color-text-faint');
+        ectx.font = '11px Inter, sans-serif';
+        ectx.textAlign = 'center';
+        ectx.textBaseline = 'top';
+        for (let xv = xStart; xv <= b.maxX + 0.001; xv += xStep) {
+          const px = m + (xv - b.minX) * t.sx;
+          if (px < m - 1 || px > right + 1) continue;
+          ectx.beginPath(); ectx.moveTo(px, m); ectx.lineTo(px, bottom); ectx.stroke();
+          ectx.fillText(Math.round(xv), px, bottom + 4);
+        }
+
+        // Y ticks (Y in XY view, Z in Z view)
+        const yRange = state.view === 'xy' ? b.maxY - b.minY : b.maxZ - b.minZ;
+        const yStep = niceAxisStep(yRange, Math.max(4, Math.floor(t.h / 80)));
+        const yMinV = state.view === 'xy' ? b.minY : b.minZ;
+        const yMaxV = state.view === 'xy' ? b.maxY : b.maxZ;
+        const yStart = Math.ceil(yMinV / yStep) * yStep;
+        ectx.textAlign = 'right';
+        ectx.textBaseline = 'middle';
+        for (let yv = yStart; yv <= yMaxV + 0.001; yv += yStep) {
+          const py = state.view === 'xy'
+            ? h - (m + (yv - b.minY) * t.sy)
+            : m + (yv - b.minZ) * t.sy;
+          if (py < m - 1 || py > bottom + 1) continue;
+          ectx.beginPath(); ectx.moveTo(m, py); ectx.lineTo(right, py); ectx.stroke();
+          ectx.fillText(Math.round(yv), m - 5, py);
+        }
+
+        ectx.setLineDash([]);
+        ectx.strokeStyle = themeVar('--color-border');
+        ectx.lineWidth = 1;
+        ectx.strokeRect(m, m, t.w, t.h);
+
+        // Axis labels
+        ectx.fillStyle = themeVar('--color-text-muted');
+        ectx.font = '12px Inter, sans-serif';
+        ectx.textAlign = 'center';
+        ectx.textBaseline = 'bottom';
+        ectx.fillText(state.view === 'xy' ? 'Inline (m)' : 'Inline (m)', m + t.w / 2, h - 4);
+        ectx.save();
+        ectx.translate(14, m + t.h / 2);
+        ectx.rotate(-Math.PI / 2);
+        ectx.textBaseline = 'top';
+        ectx.fillText(state.view === 'xy' ? 'Crossline (m)' : 'Depth (m)', 0, 0);
+        ectx.restore();
+      }
+
+      function niceAxisStep(range, targetTicks) {
+        const raw = range / Math.max(targetTicks, 1);
+        const mag = Math.pow(10, Math.floor(Math.log10(Math.max(raw, 1))));
+        const norm = raw / mag;
+        let step = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+        return step * mag;
+      }
+
+      function drawReferenceGeometry() {
+        if (!state.refConfig) return;
+        ectx.save();
+        const ghostAlpha = 0.28;
+        const scale = 0.55;
+        for (const rec of state.refConfig.receivers) {
+          const p = worldToScreen(rec.x, rec.y, rec.z);
+          const r = 10 * scale;
+          ectx.globalAlpha = ghostAlpha;
+          ectx.fillStyle = themeVar('--color-primary');
+          ectx.beginPath(); ectx.arc(p.x, p.y, r, 0, Math.PI*2); ectx.fill();
+          ectx.globalAlpha = ghostAlpha * 1.4;
+          ectx.strokeStyle = themeVar('--color-primary');
+          ectx.lineWidth = 1; ectx.setLineDash([2,2]);
+          ectx.beginPath(); ectx.arc(p.x, p.y, r+3, 0, Math.PI*2); ectx.stroke();
+          ectx.setLineDash([]);
+        }
+        for (const shot of state.refConfig.shots) {
+          const p = worldToScreen(shot.x, shot.y, shot.z);
+          const s = 12 * scale;
+          ectx.globalAlpha = ghostAlpha;
+          ectx.fillStyle = themeVar('--color-orange');
+          ectx.beginPath();
+          ectx.moveTo(p.x,p.y-s); ectx.lineTo(p.x+s,p.y); ectx.lineTo(p.x,p.y+s); ectx.lineTo(p.x-s,p.y);
+          ectx.closePath(); ectx.fill();
+          ectx.globalAlpha = ghostAlpha * 1.4;
+          ectx.strokeStyle = themeVar('--color-orange');
+          ectx.lineWidth = 1; ectx.setLineDash([2,2]);
+          ectx.beginPath();
+          ectx.moveTo(p.x,p.y-s-3); ectx.lineTo(p.x+s+3,p.y); ectx.lineTo(p.x,p.y+s+3); ectx.lineTo(p.x-s-3,p.y);
+          ectx.closePath(); ectx.stroke();
+          ectx.setLineDash([]);
+        }
+        ectx.restore();
+      }
+
+
+      function drawModelLines() {
+        if (state.view !== 'z') return;
+        const left = worldToScreen(getBounds().minX,0,0).x;
+        const right = worldToScreen(getBounds().maxX,0,0).x;
+        // Free surface at z=0
+        const fsY = worldToScreen(0,0,0).y;
+        ectx.save();
+        ectx.strokeStyle = 'rgba(120,220,255,0.85)';
+        ectx.lineWidth = 2;
+        ectx.setLineDash([8, 5]);
+        ectx.beginPath(); ectx.moveTo(left, fsY); ectx.lineTo(right, fsY); ectx.stroke();
+        ectx.setLineDash([]);
+        ectx.font = '11px Inter, sans-serif';
+        ectx.fillStyle = 'rgba(120,220,255,0.95)';
+        ectx.textAlign = 'left';
+        ectx.textBaseline = 'bottom';
+        ectx.fillText('Free surface (z = 0)', left + 6, fsY - 3);
+        ectx.restore();
+        const allInterfaces = [['waterBottom', state.waterBottom, themeVar('--color-blue')],
+          ...state.layers.map((l,i) => [`Layer ${i+1} (${l.velocity}m/s)`, l.depth, themeVar('--color-green')])];
+        allInterfaces.forEach(([name, z, color]) => {
+          const y = worldToScreen(0,0,z).y;
+          ectx.strokeStyle = color;
+          ectx.lineWidth = 3;
+          ectx.beginPath(); ectx.moveTo(left,y); ectx.lineTo(right,y); ectx.stroke();
+          const lblText = (name === 'waterBottom' ? 'Water bottom: ' : name + ': ') + Math.round(z) + ' m';
+          ectx.font = '13px Inter, sans-serif';
+          const lblW = ectx.measureText(lblText).width;
+          const boxW = Math.max(lblW + 24, 80);
+          const boxH = 28;
+          const margin = getViewTransform().margin;
+          const boxX = margin + 8;
+          const boxY = Math.max(margin + 4, Math.min(y - boxH / 2, editorCanvas.height - margin - boxH - 4));
+          ectx.fillStyle = themeVar('--color-surface');
+          ectx.strokeStyle = color;
+          ectx.lineWidth = 1.5;
+          ectx.beginPath(); ectx.roundRect(boxX, boxY, boxW, boxH, 8); ectx.fill(); ectx.stroke();
+          ectx.fillStyle = color;
+          ectx.textBaseline = 'middle';
+          ectx.textAlign = 'left';
+          ectx.fillText(lblText, boxX + 12, boxY + boxH / 2);
+        });
+      }
+
+      function drawConnections() {
+        const shotObjs = state.shots;
+        const recObjs = state.receivers;
+        if (!shotObjs.length || !recObjs.length) return;
+        ectx.lineWidth = 0.75;
+        ectx.strokeStyle = 'rgba(6,108,115,0.06)';
+        for (const shot of shotObjs) {
+          for (const rec of recObjs) {
+            const a = worldToScreen(shot.x, shot.y, shot.z);
+            const b = worldToScreen(rec.x, rec.y, rec.z);
+            ectx.beginPath(); ectx.moveTo(a.x,a.y); ectx.lineTo(b.x,b.y); ectx.stroke();
+          }
+        }
+        const selectedObjs = [...state.selected].map(getObjectById).filter(Boolean);
+        if (selectedObjs.length === 2) {
+          const [aObj, bObj] = selectedObjs;
+          const a = worldToScreen(aObj.x,aObj.y,aObj.z);
+          const b = worldToScreen(bObj.x,bObj.y,bObj.z);
+          ectx.strokeStyle = themeVar('--color-red');
+          ectx.lineWidth = 3;
+          ectx.beginPath(); ectx.moveTo(a.x,a.y); ectx.lineTo(b.x,b.y); ectx.stroke();
+          const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+          const d = dist3(aObj,bObj);
+          state.lineMeasure = { a:aObj, b:bObj, distance:d };
+          ectx.fillStyle = themeVar('--color-surface');
+          ectx.strokeStyle = themeVar('--color-red');
+          ectx.lineWidth = 1.25;
+          ectx.beginPath(); ectx.roundRect(mx-62,my-18,124,28,8); ectx.fill(); ectx.stroke();
+          ectx.fillStyle = themeVar('--color-red');
+          ectx.font = '13px Inter, sans-serif';
+          ectx.fillText(fmt(d,1)+' m', mx-24, my+1);
+        } else if (state.lineMeasure && state.selected.size !== 2) {
+          state.lineMeasure = null;
+        }
+      }
+
+      function drawObjects() {
+        for (const rec of state.receivers) drawNode(rec, themeVar('--color-primary'), rec.type === 'receiver');
+        for (const shot of state.shots) drawNode(shot, themeVar('--color-orange'), false);
+      }
+
+      function drawNode(obj, color, circle=true) {
+        const p = worldToScreen(obj.x, obj.y, obj.z);
+        const selected = state.selected.has(obj.id);
+        // Dim items excluded by gather filter
+        const fg = filteredGeom();
+        const inFilter = !state.gatherFilters.length ||
+          fg.shots.some(s => s.id === obj.id) || fg.receivers.some(r => r.id === obj.id);
+        ectx.globalAlpha = inFilter ? 1 : 0.2;
+        ectx.strokeStyle = selected ? themeVar('--color-red') : color;
+        ectx.fillStyle = selected ? themeVar('--color-red') : color;
+        ectx.lineWidth = selected ? 3 : 2;
+        if (circle) {
+          ectx.beginPath(); ectx.arc(p.x,p.y,10,0,Math.PI*2); ectx.fill();
+          ectx.fillStyle = themeVar('--color-surface');
+          ectx.beginPath(); ectx.arc(p.x,p.y,4,0,Math.PI*2); ectx.fill();
+        } else {
+          ectx.beginPath(); ectx.moveTo(p.x,p.y-12); ectx.lineTo(p.x+12,p.y); ectx.lineTo(p.x,p.y+12); ectx.lineTo(p.x-12,p.y); ectx.closePath(); ectx.fill();
+        }
+        ectx.globalAlpha = 1;
+      }
+
+      function drawSelectionBox() {
+        if (!state.selectionBox) return;
+        const { x0, y0, x1, y1 } = state.selectionBox;
+        ectx.save();
+        ectx.strokeStyle = themeVar('--color-blue');
+        ectx.fillStyle = 'rgba(44,109,184,0.12)';
+        ectx.lineWidth = 1.5;
+        ectx.setLineDash([6,5]);
+        ectx.beginPath(); ectx.rect(Math.min(x0,x1), Math.min(y0,y1), Math.abs(x1-x0), Math.abs(y1-y0)); ectx.fill(); ectx.stroke();
+        ectx.restore();
+      }
+
+      function renderEditor() {
+        syncInputs();
+        drawGridAndAxes();
+        drawReferenceGeometry();
+        drawModelLines();
+        drawCoveragePatch();
+        drawConnections();
+        drawObjects();
+        drawSelectionBox();
+        updateSelectionInfo();
+      }
+
+      function addPulse(trace, timeSec, amp) {
+        const center = Math.round(timeSec / dt);
+        for (let i=-pulseHalf;i<=pulseHalf;i++) {
+          const idx = center + i;
+          if (idx >= 0 && idx < trace.length) trace[idx] += amp * pulse[i + pulseHalf];
+        }
+      }
+
+      // ── Physics helpers ────────────────────────────────────────────────────────
+
+      // 3-D offset between shot and receiver (x,y plane only — z handled per arrival)
+      function lateralDist(s, r) {
+        return Math.hypot(r.x - s.x, r.y - s.y);
+      }
+
+      // Water-bottom specular reflection travel time.
+      // Uses the image-source method: mirror the shot about the WB plane, then
+      // the reflected ray = straight line from image to receiver, all in water.
+      // Only valid when both shot and receiver are above (shallower than) the WB.
+      // Returns null if geometry is degenerate (interface below both nodes).
+      function travelTimeWB(s, r, wb, vw) {
+        const szAbove = Math.max(wb - s.z, 0); // shot depth above WB
+        const rzAbove = Math.max(wb - r.z, 0); // rec  depth above WB
+        if (szAbove < 1e-6 || rzAbove < 1e-6) return null; // either at/below WB → no WB reflection
+        const horiz = lateralDist(s, r);
+        // Image source is at depth wb + szAbove (reflected about wb)
+        const imgDepthDiff = szAbove + rzAbove;
+        return Math.sqrt(horiz * horiz + imgDepthDiff * imgDepthDiff) / vw;
+      }
+
+      // Deep reflector travel time via two-layer Snell's law.
+      // Path: shot (in water) → WB → reflector → WB → receiver (in water).
+      // We solve for the horizontal offset of the down-going WB pierce point
+      // using Snell's law (sin θ₁ / v₁ = sin θ₂ / v₂) with a bisection search.
+      // Returns null if geometry is degenerate.
+      function travelTimeRefl(s, r, wb, refl, vw, vr) {
+        const h1s = Math.max(wb - s.z, 0);   // shot  depth above WB
+        const h1r = Math.max(wb - r.z, 0);   // rec   depth above WB
+        const h2  = Math.max(refl - wb, 1);  // layer thickness between WB and reflector
+        const X   = lateralDist(s, r);       // total horizontal distance shot→receiver
+        if (h2 < 1) return null;
+
+        // We parameterise by x1 = horizontal offset of shot-side WB pierce point.
+        // By symmetry of Snell's law on the reflector, the ray path is:
+        //   shot → (x1 horizontally) → WB → (h2 in sub-layer) → reflector midpoint
+        //   → (h2 in sub-layer) → WB → (X-x1 horizontally) → receiver
+        // Snell's law: sin(θ_water)/vw = sin(θ_sub)/vr at WB
+        // We find x1 such that the angle condition is satisfied.
+        //
+        // Let x1 = pierce offset from shot side, x2 = X - x1 for receiver side.
+        // Down-going leg in water: angle θ_s where tan(θ_s) = x1_sub / h2
+        // Up-going leg in water:   angle θ_r where tan(θ_r) = x2_sub / h2
+        // Snell requires sin(θ_s) = sin(θ_r) (same media both sides for WB legs),
+        // so x1_sub = x2_sub, meaning the reflector bounce point is at X/2 horizontally.
+        // Then at WB: sin(θ_water_down)/vw = sin(θ_sub)/vr
+        //   where tan(θ_sub) = (X/2) / h2, tan(θ_water_s) = (x1) / h1s
+        // We need: sin(θ_water_s)/vw = sin(θ_sub)/vr  (Snell at WB, downgoing)
+        // same for receiver side with h1r.
+        // Because shot and receiver may be at different depths, the two WB pierce
+        // points are not necessarily symmetric. We solve numerically.
+        //
+        // Variables: p = horizontal slowness (ray parameter), same for all legs.
+        //   p = sin(θ) / v   (constant along ray by Snell's law)
+        //   In water leg (shot side):   sin(θws) = p * vw, horizontal = h1s * tan(θws)
+        //   In sub  leg  (shot side):   sin(θs)  = p * vr, horizontal = h2  * tan(θs)
+        //   reflector bounce point is at half-horizontal of sub-layer total
+        //   In sub  leg  (rec  side):   same θs, horizontal = h2  * tan(θs)
+        //   In water leg (rec  side):   sin(θwr) = p * vw, horizontal = h1r * tan(θwr)
+        //   Total horizontal = h1s*tan(θws) + h2*tan(θs) + h2*tan(θs) + h1r*tan(θwr) = X
+        //
+        // Solve for p in [0, 1/vr) via bisection.
+
+        function totalHoriz(p) {
+          const sinWs = p * vw;
+          const sinSub = p * vr;
+          if (sinWs >= 1 || sinSub >= 1) return Infinity;
+          const tanWs = sinWs / Math.sqrt(1 - sinWs * sinWs);
+          const tanWr = sinWs / Math.sqrt(1 - sinWs * sinWs); // same vw both sides
+          const tanSub = sinSub / Math.sqrt(1 - sinSub * sinSub);
+          return h1s * tanWs + 2 * h2 * tanSub + h1r * tanWr;
+        }
+
+        // Bisect: find p such that totalHoriz(p) = X
+        const pMax = (1 / vr) * 0.9999;
+        if (totalHoriz(0) > X) {
+          // X=0 case: p=0, straight down and up
+        }
+        let lo = 0, hi = pMax;
+        for (let iter = 0; iter < 64; iter++) {
+          const mid = (lo + hi) / 2;
+          if (totalHoriz(mid) < X) lo = mid; else hi = mid;
+        }
+        const p = (lo + hi) / 2;
+
+        // Compute travel time along each leg
+        const sinWs = p * vw;
+        const sinSub = p * vr;
+        if (sinWs >= 1 || sinSub >= 1) return null;
+        const cosWs = Math.sqrt(1 - sinWs * sinWs);
+        const cosSub = Math.sqrt(1 - sinSub * sinSub);
+        const legWs  = h1s / (vw * cosWs);   // shot water leg
+        const legWr  = h1r / (vw * cosWs);   // rec  water leg (same angle, same vw)
+        const legSub = h2  / (vr * cosSub);  // each sub-layer leg (×2)
+        return legWs + 2 * legSub + legWr;
+      }
+
+      function buildSynthetic(model, filters = {}) {
+        const selShots = filters.shots  || [];
+        const selRecs  = filters.receivers || [];
+        const shots = selShots.length ? selShots : model.shots;
+        const recs  = selRecs.length  ? selRecs  : model.receivers;
+        const vw  = model.waterVelocity;
+        const wb  = model.waterBottom;
+        const layers = model.layers || [{depth:2000, velocity:2200}];
+        const avoR0 = model.avoR0 ?? 0.1;
+        const avoG  = model.avoG  ?? 0.3;
+
+        const gathers = [], tracesMeta = [];
+
+        for (const s of shots) {
+          for (const r of recs) {
+            const trace = new Array(timeSamples).fill(0);
+            const horiz = lateralDist(s, r);
+            const off   = Math.hypot(r.x - s.x, r.y - s.y);
+
+            // Direct arrival
+            const directDist = Math.hypot(horiz, Math.abs(r.z - s.z));
+            const tDirect = directDist / vw;
+            addPulse(trace, tDirect, 1.0);
+
+            // Water-bottom reflection
+            const tWB = travelTimeWB(s, r, wb, vw);
+            if (tWB !== null && tWB > tDirect + dt) {
+              const szA = Math.max(wb - s.z, 0), rzA = Math.max(wb - r.z, 0);
+              const sinThWB = horiz / Math.hypot(horiz, szA + rzA + 1e-6);
+              const ampWB = 0.9 * (avoR0 + avoG * sinThWB * sinThWB) / Math.max(Math.abs(avoR0), 0.01);
+              addPulse(trace, tWB, ampWB);
+            }
+
+            // Each reflector layer — N-layer Snell's law
+            const primLayerTimes = [];
+            for (let li = 0; li < layers.length; li++) {
+              const layer = layers[li];
+              if (layer.depth <= wb) { primLayerTimes.push(null); continue; }
+              const tR = travelTimeNLayer(s, r, wb, vw, layers, li);
+              primLayerTimes.push(tR);
+              if (tR !== null && tR > tDirect + dt) {
+                const totalThickness = Math.max(layer.depth - wb, 1);
+                const sinTh = horiz / Math.hypot(horiz, totalThickness * 2);
+                const baseAmp = 0.8 * Math.pow(0.85, li);
+                const ampR = baseAmp * (avoR0 + avoG * sinTh * sinTh) / Math.max(Math.abs(avoR0), 0.01);
+                addPulse(trace, tR, ampR);
+              }
+            }
+
+            // ── Free-surface ghosts ──────────────────────────────────
+            // Ghost = primary event delayed by 2*depth/vw, polarity inverted (-1)
+            // This is the physically correct delay-based free-surface ghost model.
+            if (model.ghosts && Math.abs(s.z) > 1e-6 && Math.abs(r.z) > 1e-6) {
+              const dlyS = 2 * Math.abs(s.z) / vw;  // shot ghost delay (s)
+              const dlyR = 2 * Math.abs(r.z) / vw;  // receiver ghost delay (s)
+
+              // ── Shot ghost (SGH): every primary event shifted by dlyS ──
+              addPulse(trace, tDirect + dlyS, -0.9);
+              if (tWB !== null) addPulse(trace, tWB + dlyS, -0.9);
+              for (let li = 0; li < primLayerTimes.length; li++) {
+                const tP = primLayerTimes[li];
+                if (tP !== null) addPulse(trace, tP + dlyS, -0.8 * Math.pow(0.85, li));
+              }
+
+              // ── Receiver ghost (RGH): WB and layer reflections only (no DA — invalid raypath) ──
+              if (tWB !== null) addPulse(trace, tWB + dlyR, -0.9);
+              for (let li = 0; li < primLayerTimes.length; li++) {
+                const tP = primLayerTimes[li];
+                if (tP !== null) addPulse(trace, tP + dlyR, -0.8 * Math.pow(0.85, li));
+              }
+            }
+
+
+            gathers.push({trace, s, r, off});
+            tracesMeta.push({shot:s, rec:r, off});
+          }
+        }
+
+        gathers.forEach(it => {
+          let mx = 1e-12;
+          it.trace.forEach(v => { if (Math.abs(v) > mx) mx = Math.abs(v); });
+          for (let i = 0; i < it.trace.length; i++) it.trace[i] /= mx;
+        });
+
+        return {gathers, tracesMeta};
+      }
+
+      // N-layer travel time: water layer + sub-layers down to reflector index li
+      function travelTimeNLayer(s, r, wb, vw, layers, targetIdx) {
+        const layer = layers[targetIdx];
+        if (!layer || layer.depth <= wb) return null;
+        // Use travelTimeRefl for first layer (exact Snell's law bisection)
+        if (targetIdx === 0) {
+          return travelTimeRefl(s, r, wb, layer.depth, vw, layer.velocity);
+        }
+        // For deeper layers: straight-ray approximation through stack
+        const h1s = Math.max(wb - s.z, 0);
+        const h1r = Math.max(wb - r.z, 0);
+        const X   = lateralDist(s, r);
+        // RMS velocity approximation for travel time
+        let tRMS = 0, vRMS2num = 0, tTotal = 0;
+        const prevDepth = layers[targetIdx-1].depth;
+        // Water leg (shot+rec combined one-way)
+        const twat = (h1s + h1r) / vw;
+        vRMS2num += vw*vw * twat; tTotal += twat;
+        // Sub-layers up to target
+        for (let i = 0; i <= targetIdx; i++) {
+          const top = i === 0 ? wb : layers[i-1].depth;
+          const bot = layers[i].depth;
+          const dz  = bot - top;
+          const v   = layers[i].velocity;
+          const dt2 = 2 * dz / v;
+          vRMS2num += v*v * dt2; tTotal += dt2;
+        }
+        const vRMS = Math.sqrt(vRMS2num / Math.max(tTotal,1e-9));
+        const t0   = tTotal;
+        return Math.sqrt(t0*t0 + (X*X)/(vRMS*vRMS));
+      }
+
+
+      function diffSynthetic(a,b) {
+        const nTr = Math.max(a.gathers.length, b.gathers.length);
+        // Compute all raw differences first
+        const rawTraces = [];
+        for (let it=0; it<nTr; it++) {
+          const ta = a.gathers[it]?.trace || new Array(timeSamples).fill(0);
+          const tb = b.gathers[it]?.trace || new Array(timeSamples).fill(0);
+          const tr = new Float64Array(timeSamples);
+          for (let i=0;i<timeSamples;i++) tr[i] = (tb[i] || 0) - (ta[i] || 0);
+          rawTraces.push(tr);
+        }
+        // Single global max so relative amplitudes are preserved
+        let globalMax = 1e-12;
+        for (const tr of rawTraces)
+          for (let i=0;i<tr.length;i++) if (Math.abs(tr[i]) > globalMax) globalMax = Math.abs(tr[i]);
+        const gathers = [];
+        for (let it=0; it<nTr; it++) {
+          const tr = Array.from(rawTraces[it], v => v / globalMax);
+          const ref = b.gathers[it] || a.gathers[it];
+          gathers.push({ trace: tr, s: ref?.s, r: ref?.r, off: ref?.off ?? 0 });
+        }
+        return { gathers, tracesMeta: b.tracesMeta || a.tracesMeta || [] };
+      }
+
+      function niceTickStep(min, max, target) {
+        const span = Math.max(max - min, 1);
+        const raw = span / target;
+        const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+        const norm = raw / mag;
+        let step;
+        if (norm < 1.5) step = 1; else if (norm < 3) step = 2; else if (norm < 7) step = 5; else step = 10;
+        return step * mag;
+      }
+
+      const xAxisLabels = { offset:'Offset (m)', shotx:'Shot X (m)', shoty:'Shot Y (m)', recx:'Rec X (m)', recy:'Rec Y (m)', cmpx:'CMP X (m)', cmpy:'CMP Y (m)' };
+      function getXVal(meta, axis) {
+        if (!meta) return 0;
+        switch(axis) {
+          case 'shotx': return meta.shot?.x ?? 0;
+          case 'shoty': return meta.shot?.y ?? 0;
+          case 'recx':  return meta.rec?.x ?? 0;
+          case 'recy':  return meta.rec?.y ?? 0;
+          case 'cmpx': return ((meta.shot?.x ?? 0) + (meta.rec?.x ?? 0)) / 2;
+          case 'cmpy': return ((meta.shot?.y ?? 0) + (meta.rec?.y ?? 0)) / 2;
+          default:      return Math.abs(meta.off ?? 0);
+        }
+      }
+
+      function drawPlot(canvas, dataset, title='') {
+        const ctx = canvas.getContext('2d');
+        const cssW = canvas.clientWidth || canvas.width;
+        const cssH = canvas.clientHeight || canvas.height;
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        const w = cssW, h = cssH;
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = themeVar('--plot-bg');
+        ctx.fillRect(0,0,w,h);
+
+        const margin = { left: 76, right: 80, top: 18, bottom: 54 };
+        const pw = Math.max(80, w - margin.left - margin.right);
+        const ph = Math.max(80, h - margin.top - margin.bottom);
+        const x0 = margin.left, y0 = margin.top;
+
+        // Normalise dataset: buildSynthetic → {gathers, tracesMeta}; diffSynthetic → {traces, meta}
+        let traces, meta;
+        if (dataset.gathers) {
+          traces = dataset.gathers.map(g => g.trace);
+          meta   = dataset.tracesMeta || dataset.gathers.map(g => ({ shot: g.s, rec: g.r, off: g.off }));
+        } else {
+          traces = dataset.traces || [];
+          meta   = dataset.meta || [];
+        }
+
+        const axis = state.xAxis || 'offset';
+        const xVals = meta.map(m => getXVal(m, axis));
+        const trCount = traces.length;
+        const allX = trCount > 0 ? xVals : [0];
+        let minX = Math.min(...allX), maxX = Math.max(...allX);
+        // When all traces share the same x (e.g. 1 shot + 1 receiver at offset 0),
+        // spread them so the single trace renders centred with a meaningful axis range.
+        if (maxX - minX < 1) { minX -= 50; maxX += 50; }
+        // Apply user-defined x range
+        const xMinUser = parseFloat(document.getElementById('xMinInput')?.value);
+        const xMaxUser = parseFloat(document.getElementById('xMaxInput')?.value);
+        if (!isNaN(xMinUser)) minX = xMinUser;
+        if (!isNaN(xMaxUser)) maxX = xMaxUser;
+        if (maxX - minX < 1) { minX -= 50; maxX += 50; }
+        // Cache FULL pre-zoom data range BEFORE applying zoom
+        if (typeof plotZoom !== 'undefined') plotZoom['_fullRange_' + canvas.id] = { minX, maxX };
+        // Apply box-zoom override if active
+        const zoomR = canvas.id === 'modalCanvas'
+          ? (typeof modalZoom !== 'undefined' ? modalZoom : null)
+          : (typeof plotZoom !== 'undefined' ? plotZoom[canvas.id] : null);
+        if (zoomR) { minX = zoomR.minX; maxX = zoomR.maxX; }
+        const maxTimeMs = timeSamples * dt * 1000;
+
+        ctx.strokeStyle = themeVar('--plot-grid');
+        ctx.lineWidth = 1;
+        ctx.fillStyle = themeVar('--plot-axis');
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+
+        const xStep = niceTickStep(minX, maxX, Math.max(3, Math.floor(pw / 120)));
+        for (let x = Math.ceil(minX/xStep)*xStep; x <= maxX + 0.001; x += xStep) {
+          const px = x0 + ((x - minX) / (maxX - minX)) * pw;
+          ctx.beginPath(); ctx.moveTo(px, y0); ctx.lineTo(px, y0 + ph); ctx.stroke();
+          ctx.fillText(String(Math.round(x)), px, y0 + ph + 8);
+        }
+
+        const tMinMs3 = zoomR ? zoomR.tMin : (parseFloat(document.getElementById('tMinInput')?.value) || 0);
+        const tMaxDisp = zoomR ? zoomR.tMax : maxTimeMs;
+        const tDisplayRange = Math.max(tMaxDisp - tMinMs3, 1);
+        const yStep = niceTickStep(tMinMs3, tMaxDisp, Math.max(4, Math.floor(ph / 65)));
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let t = Math.ceil(tMinMs3/yStep)*yStep; t <= tMaxDisp + 0.001; t += yStep) {
+          const py = y0 + ((t - tMinMs3) / tDisplayRange) * ph;
+          ctx.beginPath(); ctx.moveTo(x0, py); ctx.lineTo(x0 + pw, py); ctx.stroke();
+          ctx.fillText(String(Math.round(t)), x0 - 10, py);
+        }
+
+        ctx.strokeStyle = themeVar('--plot-axis');
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y0 + ph); ctx.lineTo(x0 + pw, y0 + ph); ctx.stroke();
+
+        // Trace spacing in screen pixels (may be very small with many traces)
+        const trSpacing = trCount > 1 ? pw / (trCount - 1) : pw;
+        // Half-width: use full data range to keep amplitude scale consistent when zoomed
+        const fullRangeX = typeof plotZoom !== 'undefined' && plotZoom['_fullRange_' + canvas.id];
+        const fullXSpan  = fullRangeX ? fullRangeX.maxX - fullRangeX.minX : (maxX - minX);
+        const fullSpacing = trCount > 1 ? pw * (fullXSpan > 0 ? (maxX - minX) / fullXSpan : 1) / (trCount - 1) : pw;
+        const halfDx = Math.min(Math.max(fullSpacing * 0.45, 4), Math.min(30, pw * 0.12));
+
+        // ── Sum traces sharing the same x position ─────────────────────────────────
+        const xMap = new Map();
+        const isCMP = axis === 'cmpx' || axis === 'cmpy';
+        const cmpBin = isCMP ? (parseFloat(document.getElementById('cmpBinInput')?.value) || 100) : null;
+        for (let it=0; it<trCount; it++) {
+          const xv = xVals[it];
+          const key = isCMP ? Math.round(xv / cmpBin) : Math.round(xv * 10);
+          if (!xMap.has(key)) xMap.set(key, { xv: isCMP ? key * cmpBin : xv, acc: new Float64Array(timeSamples) });
+          const entry = xMap.get(key);
+          for (let i=0; i<timeSamples; i++) entry.acc[i] += traces[it][i];
+        }
+        const summedEntries = [...xMap.values()].sort((a,b)=>a.xv-b.xv);
+        for (const e of summedEntries) {
+          let mx = 1e-12;
+          for (let i=0; i<e.acc.length; i++) if (Math.abs(e.acc[i]) > mx) mx = Math.abs(e.acc[i]);
+          for (let i=0; i<e.acc.length; i++) e.acc[i] /= mx;
+        }
+        // NMO correction
+        if (state.nmoOn && dataset.gathers) {
+          const vRMS = computeVRMS(state.layers, state.waterBottom, state.waterVelocity);
+          for (const e of summedEntries) {
+            const offset = e.xv;
+            const corrected = new Float64Array(timeSamples);
+            for (let i = 0; i < timeSamples; i++) {
+              const t = i * dt;
+              const tNMO = t*t - (offset*offset)/(vRMS*vRMS);
+              if (tNMO < 0) continue;
+              const tCorr = Math.sqrt(tNMO);
+              const iCorr = Math.round(tCorr / dt);
+              if (iCorr >= 0 && iCorr < timeSamples) corrected[iCorr] += e.acc[i];
+            }
+            // renormalise
+            let mx = 1e-12; for (let i=0;i<timeSamples;i++) if(Math.abs(corrected[i])>mx) mx=Math.abs(corrected[i]);
+            for (let i=0;i<timeSamples;i++) corrected[i]/=mx;
+            e.acc = corrected;
+          }
+        }
+        for (const { xv, acc: trace } of summedEntries) {
+          const xBase = x0 + ((xv - minX) / (maxX - minX)) * pw;
+          if (xBase < x0 - halfDx || xBase > x0 + pw + halfDx) continue;
+
+          const ampScale = 1.68 * halfDx * (state.gain ?? 1);
+          // Determine sign for fill: positive→blue, negative→orange (for diff plot positivity varies)
+          // Draw fill first (positive side blue, negative side orange)
+          const posPath = new Path2D();
+          const negPath = new Path2D();
+          const tMinMs2 = tMinMs3;
+          const tMinSample = Math.max(0, Math.round(tMinMs2 / (dt * 1000)));
+          const tMaxSample = zoomR ? Math.ceil(zoomR.tMax / (dt * 1000)) : trace.length;
+          const tRangeMs = tDisplayRange;
+          posPath.moveTo(xBase, y0);
+          negPath.moveTo(xBase, y0);
+          for (let is=tMinSample; is<tMaxSample; is++) {
+            const tms = is * dt * 1000 - tMinMs2;
+            const px = xBase + trace[is] * ampScale;
+            const py = y0 + (tms / Math.max(tRangeMs, 1)) * ph;
+            posPath.lineTo(px, py);
+            negPath.lineTo(px, py);
+          }
+          posPath.lineTo(xBase, y0 + ph); posPath.closePath();
+          negPath.lineTo(xBase, y0 + ph); negPath.closePath();
+
+          const traceColor = themeVar('--color-text');
+
+          ctx.save();
+          ctx.beginPath(); ctx.rect(xBase, y0, pw + 200, ph); ctx.clip();
+          ctx.fillStyle = traceColor;
+          ctx.globalAlpha = 0.32;
+          ctx.fill(posPath);
+          ctx.restore();
+
+          ctx.save();
+          ctx.beginPath(); ctx.rect(xBase - pw - 200, y0, pw + 200, ph); ctx.clip();
+          ctx.fillStyle = traceColor;
+          ctx.globalAlpha = 0.32;
+          ctx.fill(negPath);
+          ctx.restore();
+
+          // Draw wiggle line
+          ctx.beginPath();
+          let first = true;
+          for (let is=tMinSample; is<tMaxSample; is++) {
+            const tms = is * dt * 1000 - tMinMs2;
+            const px = xBase + trace[is] * ampScale;
+            const py = y0 + (tms / tDisplayRange) * ph;
+            if (first) { ctx.moveTo(px, py); first = false; } else ctx.lineTo(px, py);
+          }
+          ctx.strokeStyle = themeVar('--color-blue');
+          ctx.lineWidth = 1.25;
+          ctx.globalAlpha = 1;
+          ctx.stroke();
+        }
+
+        // Axis labels
+        ctx.fillStyle = themeVar('--color-text');
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.font = '13px Inter, sans-serif';
+        ctx.fillText(xAxisLabels[axis] || 'Offset (m)', x0 + pw/2, h - 10);
+        ctx.save();
+        ctx.translate(18, y0 + ph/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.fillText('Travel time (ms)', 0, 0);
+        ctx.restore();
+
+                // ── Arrival type labels — Updated (middle) plot only ────────
+        if (dataset.gathers && (canvas.id === 'plotUpdated' || title === 'Current seismic' || (canvas.id === 'modalCanvas' && typeof state !== 'undefined' && state.modalPlot === 'plotUpdated')) &&
+            state.shots.length && state.receivers.length) {
+
+          const vw0 = state.waterVelocity;
+          const wb0 = state.waterBottom;
+          const tMinMs0 = zoomR ? zoomR.tMin : (parseFloat(document.getElementById('tMinInput')?.value) || 0);
+          const tMaxMs0 = zoomR ? zoomR.tMax : timeSamples * dt * 1000;
+          const tRange0 = tMaxMs0 - tMinMs0;
+
+          // Pick the trace closest to the centre of the visible x window
+          const xMid = (minX + maxX) / 2;
+          const visEntries = summedEntries.filter(e => {
+            const xb = x0 + ((e.xv - minX) / (maxX - minX)) * pw;
+            return xb >= x0 && xb <= x0 + pw;
+          });
+          const centreEntry = (visEntries.length > 0 ? visEntries : summedEntries)
+            .reduce((best, e) => Math.abs(e.xv - xMid) < Math.abs(best.xv - xMid) ? e : best,
+              (visEntries.length > 0 ? visEntries : summedEntries)[0]);
+
+          // Find the shot-receiver pair whose getXVal is closest to centreEntry.xv
+          const axis0 = state.xAxis || 'offset';
+          const _fg0 = (typeof filteredGeom === 'function') ? filteredGeom() : { shots: state.shots, receivers: state.receivers };
+          const _shots0 = _fg0.shots.length ? _fg0.shots : state.shots;
+          const _recs0  = _fg0.receivers.length ? _fg0.receivers : state.receivers;
+          let s0 = _shots0[0], r0 = _recs0[0];
+          let bestDist = Infinity;
+          for (const s of _shots0) {
+            for (const r of _recs0) {
+              const xv = getXVal({ shot: s, rec: r, off: lateralDist(s, r) }, axis0);
+              const d = Math.abs(xv - centreEntry.xv);
+              if (d < bestDist) { bestDist = d; s0 = s; r0 = r; }
+            }
+          }
+
+          // Expected arrival times
+          const horiz0 = lateralDist(s0, r0);
+          const tDA  = Math.hypot(horiz0, Math.abs(r0.z - s0.z)) / vw0 * 1000;
+          const tWB0 = travelTimeWB(s0, r0, wb0, vw0);
+          const layerTimes = state.layers.map((_, li) => travelTimeNLayer(s0, r0, wb0, vw0, state.layers, li));
+
+          const clrDA  = themeVar('--color-text');
+          const clrRFL = '#e05252';
+          const clrSGH = themeVar('--color-orange');
+          const clrRGH = themeVar('--color-green');
+
+          // Build arrivals — DA and ghosts carry a 'side' hint (+1=positive peak, -1=negative)
+          const arrivals = [];
+          arrivals.push({ label: 'DA', key: 'DA', t: tDA, color: clrDA, side: 1 });
+          if (tWB0 !== null) arrivals.push({ label: 'RFL (WB)', key: 'RFL·WB', t: tWB0 * 1000, color: clrRFL, side: 1 });
+          layerTimes.forEach((t, li) => { if (t !== null) arrivals.push({ label: 'RFL (L' + (li+1) + ')', key: 'RFL·L'+(li+1), t: t * 1000, color: clrRFL, side: 1 }); });
+          if (state.ghosts && Math.abs(s0.z) > 1e-6 && Math.abs(r0.z) > 1e-6) {
+            const dlyS0 = 2 * Math.abs(s0.z) / vw0;  // shot ghost delay (s)
+            const dlyR0 = 2 * Math.abs(r0.z) / vw0;  // receiver ghost delay (s)
+            // Shot ghost labels (SGH) — primary events shifted by dlyS0
+            arrivals.push({ label: 'SGH', key: 'SGH·DA', t: tDA + dlyS0 * 1000, color: clrSGH, side: -1 });
+            if (tWB0 !== null) arrivals.push({ label: 'SGH', key: 'SGH·WB', t: (tWB0 + dlyS0) * 1000, color: clrSGH, side: -1 });
+            layerTimes.forEach((t, li) => {
+              if (t !== null) arrivals.push({ label: 'SGH', key: 'SGH·L'+(li+1), t: (t + dlyS0) * 1000, color: clrSGH, side: -1 });
+            });
+            // Receiver ghost labels (RGH) — primary events shifted by dlyR0
+            if (tWB0 !== null) arrivals.push({ label: 'RGH', key: 'RGH·WB', t: (tWB0 + dlyR0) * 1000, color: clrRGH, side: -1 });
+            layerTimes.forEach((t, li) => {
+              if (t !== null) arrivals.push({ label: 'RGH', key: 'RGH·L'+(li+1), t: (t + dlyR0) * 1000, color: clrRGH, side: -1 });
+            });
+          }
+
+          // Use centre-of-view trace for peak finding and label anchor
+          const zeroEntry = centreEntry;
+          const xBaseZero = zeroEntry
+            ? x0 + ((zeroEntry.xv - minX) / (maxX - minX)) * pw
+            : x0 + pw * 0.5;
+
+          // Find peak sample — positive or negative depending on side
+          const findPeakNear = (trace, tExpMs, windowMs, side) => {
+            const iCenter = Math.round(tExpMs / (dt * 1000));
+            const iWin    = Math.round(windowMs / (dt * 1000));
+            const iLo = Math.max(0, iCenter - iWin);
+            const iHi = Math.min(trace.length - 1, iCenter + iWin);
+            let bestI = iCenter, bestVal = 0;
+            for (let i = iLo; i <= iHi; i++) {
+              const v = trace[i] * side; // look for peak on correct polarity side
+              if (v > bestVal) { bestVal = v; bestI = i; }
+            }
+            return bestI;
+          };
+
+          arrivals.sort((a, b) => a.t - b.t);
+          const drawnPy = [];
+          // ── Right-margin labels: one label per arrival type, full-width leader line ──
+          // Group arrivals by label, keep the one closest to center of time range
+          const labelMap = new Map();
+          for (const arr of arrivals) {
+            if (arr.t < tMinMs0 || arr.t > tMaxMs0) continue;
+            const peakI = zeroEntry ? findPeakNear(zeroEntry.acc, arr.t, 80, arr.side ?? 1) : Math.round(arr.t / (dt * 1000));
+            const peakTms = peakI * dt * 1000;
+            if (peakTms < tMinMs0 || peakTms > tMaxMs0) continue;
+            const py = y0 + ((peakTms - tMinMs0) / tRange0) * ph;
+            const key = arr.key ?? arr.label;
+            if (!labelMap.has(key)) {
+              labelMap.set(key, { arr, py });
+            }
+          }
+
+          // Resolve vertical collisions between different label types
+          const isModal = canvas.id === 'modalCanvas';
+          const pillH   = isModal ? 20 : 14;
+          const lblFont = isModal ? 'bold 13px Inter, sans-serif' : 'bold 9px Inter, sans-serif';
+          const minSepLbl = pillH + 2;
+          const placed = [];
+          for (const [key, item] of labelMap) {
+            let py = item.py;
+            let attempts = 0;
+            while (placed.some(p => Math.abs(p - py) < minSepLbl) && attempts < 20) {
+              const nearest = placed.reduce((a, b) => Math.abs(b - py) < Math.abs(a - py) ? b : a);
+              py += (py >= nearest ? minSepLbl : -minSepLbl);
+              attempts++;
+            }
+            placed.push(py);
+            item.finalPy = py;
+          }
+
+          // Draw leader lines and right-margin labels
+          const marginX = x0 + pw + 4;
+          ctx.font = lblFont;
+          for (const [key, item] of labelMap) {
+            const { arr, py, finalPy } = item;
+            // Full-width dashed leader line at original peak time
+            ctx.save();
+            ctx.globalAlpha = 0.35;
+            ctx.strokeStyle = arr.color;
+            ctx.lineWidth = 0.8;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(x0, py);
+            ctx.lineTo(x0 + pw, py);
+            ctx.stroke();
+            // Vertical connector from leader to label if displaced
+            if (Math.abs(finalPy - py) > 2) {
+              ctx.setLineDash([2, 3]);
+              ctx.beginPath();
+              ctx.moveTo(x0 + pw, py);
+              ctx.lineTo(x0 + pw, finalPy);
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            ctx.globalAlpha = 1;
+            // Label pill
+            const dispLabel = item.arr.key ? item.arr.key.replace('·', '·') : item.arr.label;
+            const tw = ctx.measureText(dispLabel).width;
+            ctx.fillStyle = arr.color;
+            ctx.globalAlpha = 0.2;
+            ctx.fillRect(marginX, finalPy - pillH / 2, tw + 8, pillH);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = arr.color;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(dispLabel, marginX + 3, finalPy - pillH / 2 + 2);
+            ctx.restore();
+          }
+
+                    // ── Small legend above the plot area ────────────────────────────
+          const legendItems = [
+            { label: 'DA',  color: clrDA },
+            { label: 'RFL', color: clrRFL },
+          ];
+          if (state.ghosts) {
+            legendItems.push({ label: 'SGH', color: clrSGH });
+            legendItems.push({ label: 'RGH', color: clrRGH });
+          }
+          ctx.save();
+          ctx.font = canvas.id === 'modalCanvas' ? '12px Inter, sans-serif' : '9px Inter, sans-serif';
+          let lx2 = x0;
+          for (const item of legendItems) {
+            ctx.fillStyle = item.color;
+            ctx.globalAlpha = 0.85;
+            // swatch
+            ctx.fillRect(lx2, y0 - 13, 8, 8);
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = themeVar('--color-text-muted');
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText(item.label, lx2 + 10, y0 - 13);
+            lx2 += ctx.measureText(item.label).width + 24;
+          }
+          ctx.restore();
+        }
+        // ─────────────────────────────────────────────────────────────
+      }
+
+      // ── Modal zoom state ─────────────────────────────────────────────
+      let modalZoom = null; // { minX, maxX, tMin, tMax }
+      let modalZoomDrag = null;
+
+      function redrawModal() {
+        if (!state.modalPlot || !plotMap[state.modalPlot]) return;
+        const title = state.modalPlot === 'plotUpdated' ? 'Current seismic'
+                    : state.modalPlot === 'plotInitial' ? 'Initial seismic' : 'Difference';
+        drawPlot(modalCanvas, plotMap[state.modalPlot](), title);
+      }
+
+      modalCanvas.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        const r = modalCanvas.getBoundingClientRect();
+        modalZoomDrag = {
+          x0: e.clientX - r.left, y0: e.clientY - r.top,
+          x1: e.clientX - r.left, y1: e.clientY - r.top
+        };
+        modalCanvas.setPointerCapture(e.pointerId);
+      });
+
+      modalCanvas.addEventListener('pointermove', e => {
+        if (!modalZoomDrag) return;
+        const r = modalCanvas.getBoundingClientRect();
+        modalZoomDrag.x1 = e.clientX - r.left;
+        modalZoomDrag.y1 = e.clientY - r.top;
+        // Redraw plot first so _fullRange_ is cached, then draw rubber band on top
+        redrawModal();
+        const dpr3 = window.devicePixelRatio || 1;
+        const ctx = modalCanvas.getContext('2d');
+        // Reset to identity so we draw in raw canvas pixels
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const cx = Math.min(modalZoomDrag.x0, modalZoomDrag.x1) * dpr3;
+        const cy = Math.min(modalZoomDrag.y0, modalZoomDrag.y1) * dpr3;
+        const cw = Math.abs(modalZoomDrag.x1 - modalZoomDrag.x0) * dpr3;
+        const ch = Math.abs(modalZoomDrag.y1 - modalZoomDrag.y0) * dpr3;
+        ctx.strokeStyle = 'rgba(59,130,246,0.95)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 3]);
+        ctx.strokeRect(cx, cy, cw, ch);
+        ctx.fillStyle = 'rgba(59,130,246,0.08)';
+        ctx.fillRect(cx, cy, cw, ch);
+        ctx.restore();
+      });
+
+      modalCanvas.addEventListener('pointerup', e => {
+        if (!modalZoomDrag) return;
+        const drag = modalZoomDrag;
+        modalZoomDrag = null;
+        if (Math.abs(drag.x1 - drag.x0) < 8 || Math.abs(drag.y1 - drag.y0) < 8) { redrawModal(); return; }
+        // Single-zoom only — ignore if already zoomed (right-click to reset)
+        if (modalZoom) { redrawModal(); return; }
+
+        const margin = { left: 76, right: 80, top: 18, bottom: 54 };
+        const pw2 = Math.max(1, modalCanvas.clientWidth  - margin.left - margin.right);
+        const ph2 = Math.max(1, modalCanvas.clientHeight - margin.top  - margin.bottom);
+
+        // Always map from the FULL data range (pre-zoom), cached by drawPlot
+        // Ensure cache is populated by triggering a redraw if needed
+        if (typeof plotZoom !== 'undefined' && !plotZoom['_fullRange_modalCanvas']) redrawModal();
+        const _fr = typeof plotZoom !== 'undefined' && plotZoom['_fullRange_modalCanvas'];
+        const fullRange = _fr || (() => {
+          // compute from live state as fallback
+          const axis = state.xAxis || 'offset';
+          const metas = state.shots.flatMap(s => state.receivers.map(r => ({ shot:s, rec:r, off: lateralDist(s,r) })));
+          const xs = metas.map(m => getXVal(m, axis));
+          let mn = Math.min(...xs), mx = Math.max(...xs);
+          if (mx - mn < 1) { mn -= 50; mx += 50; }
+          return { minX: mn, maxX: mx };
+        })();
+        const tMinFull = parseFloat(document.getElementById('tMinInput')?.value) || 0;
+        const tMaxFull = timeSamples * dt * 1000;
+
+        const clamp = (v,a,b) => Math.min(Math.max(v,a),b);
+        const xFrac0 = clamp((Math.min(drag.x0, drag.x1) - margin.left) / pw2, 0, 1);
+        const xFrac1 = clamp((Math.max(drag.x0, drag.x1) - margin.left) / pw2, 0, 1);
+        const yFrac0 = clamp((Math.min(drag.y0, drag.y1) - margin.top)  / ph2, 0, 1);
+        const yFrac1 = clamp((Math.max(drag.y0, drag.y1) - margin.top)  / ph2, 0, 1);
+
+        const xSpan = fullRange.maxX - fullRange.minX;
+        const tSpan = tMaxFull - tMinFull;
+
+        modalZoom = {
+          minX: fullRange.minX + xFrac0 * xSpan,
+          maxX: fullRange.minX + xFrac1 * xSpan,
+          tMin: tMinFull + yFrac0 * tSpan,
+          tMax: tMinFull + yFrac1 * tSpan
+        };
+        redrawModal();
+      });
+
+      // Reset modal zoom when modal closes
+      // Right-click on modal canvas = zoom out
+      modalCanvas.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        if (modalZoom) { modalZoom = null; redrawModal(); }
+      });
+
+      document.getElementById('closeModalBtn').addEventListener('click', () => {
+        modal.classList.remove('open');
+        modalZoom = null;
+      });
+      modal.addEventListener('click', e => {
+        if (e.target === modal) {
+          modal.classList.remove('open');
+          modalZoom = null;
+          }
+      });
+
+            // Returns the geometry to use for all plots:
+      // selection overrides everything; else gather filters; else all.
+      function activeGeom() {
+        const hasSelection = state.selected && state.selected.size > 0;
+        if (hasSelection) {
+          const selShots = state.shots.filter(s => state.selected.has(s.id));
+          const selRecs  = state.receivers.filter(r => state.selected.has(r.id));
+          return {
+            shots:     selShots.length ? selShots : state.shots,
+            receivers: selRecs.length  ? selRecs  : state.receivers
+          };
+        }
+        return filteredGeom();
+      }
+      function activeInitialGeom() {
+        const hasSelection = state.selected && state.selected.size > 0;
+        if (hasSelection) {
+          const selShots = state.initialModel.shots.filter(s => state.selected.has(s.id));
+          const selRecs  = state.initialModel.receivers.filter(r => state.selected.has(r.id));
+          return {
+            shots:     selShots.length ? selShots : state.initialModel.shots,
+            receivers: selRecs.length  ? selRecs  : state.initialModel.receivers
+          };
+        }
+        return filteredInitialGeom();
+      }
+
+function refreshPlots() {
+        // Selection overrides gather filters; filters used only when nothing selected
+        const fg  = activeGeom();
+        const fgi = activeInitialGeom();
+        const activeFilters = {
+          shots:     fg.shots.length  ? fg.shots     : [],
+          receivers: fg.receivers.length ? fg.receivers : []
+        };
+        const avoR0 = parseFloat(document.getElementById('avoR0Input')?.value ?? 0.1);
+        const avoG  = parseFloat(document.getElementById('avoGInput')?.value  ?? 0);
+        const modelNow = {
+          shots: fg.shots, receivers: fg.receivers,
+          waterBottom: state.waterBottom, waterVelocity: state.waterVelocity,
+          layers: state.layers, avoR0, avoG, ghosts: !!state.ghosts
+        };
+        const initModel = Object.assign({}, state.initialModel,
+          { shots: fgi.shots, receivers: fgi.receivers, avoR0, avoG, ghosts: !!state.ghosts });
+        const initial = buildSynthetic(initModel, {});
+        const updated = buildSynthetic(modelNow, activeFilters);
+        const diff = diffSynthetic(initial, updated);
+        drawPlot(plotInitial, initial, 'Initial seismic');
+        drawPlot(plotUpdated, updated, 'Updated seismic');
+        drawPlot(plotDiff, diff, 'Difference');
+
+        const mShots = fg.shots;
+        const mRecs  = fg.receivers;
+        const hasSelectionStat = state.selected && state.selected.size > 0;
+        const offs=[];
+        for(const s of mShots) for(const r of mRecs) offs.push(dist3(s,r));
+        const meanOff = offs.length ? offs.reduce((a,b)=>a+b,0)/offs.length : 0;
+        const maxOff  = offs.length ? Math.max(...offs) : 0;
+        const wbTime  = meanOff/state.waterVelocity*1000;
+        const reflVel = state.layers?.[0]?.velocity ?? 2200;
+        const reflTime = meanOff/((state.waterVelocity+reflVel)/2)*1000;
+        const scope = hasSelectionStat?' (sel.)':'';
+        const mL=document.getElementById('meanOffsetLabel'),xL=document.getElementById('maxOffsetLabel');
+        if(mL) mL.textContent='Mean 3D offset'+scope;
+        if(xL) xL.textContent='Max 3D offset'+scope;
+        // Coverage chips
+        const cmpB=computeCMPBounds();
+        const ilEl=document.getElementById('ilCovChip'),xlEl=document.getElementById('xlCovChip');
+        if(ilEl) ilEl.textContent=cmpB?fmt(cmpB.maxX-cmpB.minX,0)+' m':'— m';
+        if(xlEl) xlEl.textContent=cmpB?fmt(cmpB.maxY-cmpB.minY,0)+' m':'— m';
+        meanOffsetStat.textContent = fmt(meanOff,1)+' m';
+        maxOffsetStat.textContent  = fmt(maxOff,1)+' m';
+        wbTimeStat.textContent = fmt(wbTime,1)+' ms';
+        reflTimeStat.textContent = fmt(reflTime,1) + ' ms';
+      }
+
+      function computeCMPBounds() {
+        if(!state.shots.length||!state.receivers.length) return null;
+        const xs=[],ys=[];
+        for(const s of state.shots) for(const r of state.receivers){ xs.push((s.x+r.x)/2); ys.push((s.y+r.y)/2); }
+        return{minX:Math.min(...xs),maxX:Math.max(...xs),minY:Math.min(...ys),maxY:Math.max(...ys)};
+      }
+
+      function autoSetTimeRange() {
+        const vw=state.waterVelocity,wb=state.waterBottom,layers=state.layers||[];
+        let maxTms=500;
+        const fg=(typeof filteredGeom==='function')?filteredGeom():{shots:state.shots,receivers:state.receivers};
+        for(const s of fg.shots){ for(const r of fg.receivers){
+          const h=Math.hypot(r.x-s.x,r.y-s.y);
+          const tDA=Math.hypot(h,Math.abs(r.z-s.z))/vw*1000; if(tDA>maxTms) maxTms=tDA;
+          const tWB=travelTimeWB(s,r,wb,vw); if(tWB){const t=tWB*1000;if(t>maxTms)maxTms=t;}
+          const primTimes=[tDA/1000]; // seconds
+          if(tWB) primTimes.push(tWB);
+          for(let li=0;li<layers.length;li++){
+            const tR=travelTimeNLayer(s,r,wb,vw,layers,li);
+            if(tR){const t=tR*1000;if(t>maxTms)maxTms=t; primTimes.push(tR);}
+          }
+          // Include ghost arrivals if ghosts enabled
+          if(state.ghosts && Math.abs(s.z)>1e-6 && Math.abs(r.z)>1e-6){
+            const dlyS=2*Math.abs(s.z)/vw; // seconds
+            const dlyR=2*Math.abs(r.z)/vw;
+            for(const tP of primTimes){
+              const tSGH=(tP+dlyS)*1000; if(tSGH>maxTms) maxTms=tSGH;
+              // RGH only valid for WB and layer reflections (not DA)
+              if(tP!==primTimes[0]){const tRGH=(tP+dlyR)*1000; if(tRGH>maxTms) maxTms=tRGH;}
+            }
+          }
+        }}
+        const suggested=Math.ceil((maxTms*1.15)/200)*200;
+        const el=document.getElementById('maxTimeInput');
+        if(el&&suggested>0){el.value=suggested;updateTimeSamples();}
+      }
+
+      function drawCoveragePatch() {
+        if(!state.showCoverage||state.view!=='xy') return;
+        const b=computeCMPBounds(); if(!b) return;
+        const w=b.maxX-b.minX,h=b.maxY-b.minY;
+        const tl=worldToScreen(b.minX,b.maxY,0),br=worldToScreen(b.maxX,b.minY,0);
+        const px=tl.x,py=tl.y,pw=br.x-tl.x,ph=br.y-tl.y;
+        ectx.save();
+        ectx.fillStyle='rgba(60,200,120,0.07)'; ectx.strokeStyle='rgba(60,200,120,0.6)';
+        ectx.lineWidth=1.5; ectx.setLineDash([6,4]);
+        ectx.beginPath(); ectx.rect(px,py,pw,ph); ectx.fill(); ectx.stroke();
+        ectx.setLineDash([]);
+        const tick=5; ectx.strokeStyle='rgba(60,200,120,0.7)';
+        [[px,py],[px+pw,py],[px,py+ph],[px+pw,py+ph]].forEach(([cx,cy])=>{
+          ectx.beginPath();ectx.moveTo(cx-tick,cy);ectx.lineTo(cx+tick,cy);ectx.stroke();
+          ectx.beginPath();ectx.moveTo(cx,cy-tick);ectx.lineTo(cx,cy+tick);ectx.stroke();
+        });
+        ectx.fillStyle='rgba(60,200,120,0.95)';
+        ectx.font='bold 11px DM Sans,Inter,sans-serif';
+        ectx.textAlign='center';ectx.textBaseline='middle';
+        ectx.fillText('IL: '+fmt(w,0)+' m',px+pw/2,py+ph+16);
+        ectx.save();ectx.translate(px+pw+20,py+ph/2);ectx.rotate(Math.PI/2);
+        ectx.fillText('XL: '+fmt(h,0)+' m',0,0);ectx.restore();
+        ectx.restore();
+      }
+
+      function syncGhostBtn() {
+        const btn = document.getElementById('ghostBtn');
+        if (!btn) return;
+        btn.textContent = state.ghosts ? 'Ghosts on' : 'Ghosts off';
+        btn.style.background   = state.ghosts ? 'var(--color-primary)' : '';
+        btn.style.color        = state.ghosts ? '#fff' : '';
+        btn.style.borderColor  = state.ghosts ? 'var(--color-primary)' : 'var(--color-border)';
+      }
+
+      function renderAll() { renderEditor(); syncGhostBtn(); autoSetTimeRange(); refreshPlots(); drawRosePlot(); drawCMPFold(); }
+
+      function applyDragMove(dxWorld, dyWorld, dzWorld) {
+        const sel = [...state.selected].map(getObjectById).filter(Boolean);
+        sel.forEach(obj => {
+          obj.x += dxWorld;
+          if (state.view === 'xy') obj.y += dyWorld;
+          else { const newZ = clamp(obj.z + dzWorld, 0, state.waterBottom);
+            const snapThresh = Math.max(5, state.waterBottom * 0.01);
+            obj.z = Math.abs(newZ - state.waterBottom) < snapThresh ? state.waterBottom : newZ; }
+        });
+      }
+
+      function selectByBox(box, additive) {
+        const xMin = Math.min(box.x0, box.x1), xMax = Math.max(box.x0, box.x1);
+        const yMin = Math.min(box.y0, box.y1), yMax = Math.max(box.y0, box.y1);
+        const ids = allObjects().filter(obj => {
+          const p = worldToScreen(obj.x,obj.y,obj.z);
+          return p.x >= xMin && p.x <= xMax && p.y >= yMin && p.y <= yMax;
+        }).map(o => o.id);
+        if (!additive) state.selected = new Set(ids); else ids.forEach(id => state.selected.add(id));
+        state.lineMeasure = null;
+        syncInputs();
+        updateSelectionInfo();
+      }
+
+      const zPickerPopup=document.getElementById('zPickerPopup');
+      const zPickerList=document.getElementById('zPickerList');
+      function hideZPicker(){
+        zPickerPopup.style.display='none';
+        document.removeEventListener('pointerdown',zPickerOutside,true);
+        document.removeEventListener('keydown',zPickerEsc,true);
+      }
+      function zPickerOutside(e){if(!zPickerPopup.contains(e.target))hideZPicker();}
+      function zPickerEsc(e){if(e.key==='Escape')hideZPicker();}
+      function showZPicker(cands,cx,cy){
+        zPickerList.innerHTML='';
+        cands.forEach((obj,i)=>{
+          const icon=obj.type==='shot'?'🔶':'🔵';
+          const row=document.createElement('div');
+          row.style.cssText='padding:6px 12px;cursor:pointer;border-bottom:1px solid var(--color-border);color:var(--color-text);white-space:nowrap;';
+          if(i===0) row.style.background='var(--color-primary-soft)';
+          row.textContent=`${icon} ${obj.type==='shot'?'Shot':'Rec'}  IL=${obj.x.toFixed(0)}  XL=${obj.y.toFixed(0)}  Z=${obj.z.toFixed(0)} m`;
+          row.addEventListener('mouseenter',()=>row.style.background='var(--color-surface-2)');
+          row.addEventListener('mouseleave',()=>row.style.background=i===0?'var(--color-primary-soft)':'');
+          row.addEventListener('pointerdown',e=>{e.stopPropagation();setSelection([obj.id],false);renderEditor();hideZPicker();});
+          zPickerList.appendChild(row);
+        });
+        zPickerPopup.style.display='block';
+        const vw=window.innerWidth,vh=window.innerHeight;
+        let left=cx+12,top=cy+4;
+        const pw=zPickerPopup.offsetWidth||240,ph=zPickerPopup.offsetHeight||150;
+        if(left+pw>vw-8) left=cx-pw-4;
+        if(top+ph>vh-8)  top=cy-ph-4;
+        zPickerPopup.style.left=left+'px'; zPickerPopup.style.top=top+'px';
+        setTimeout(()=>{document.addEventListener('pointerdown',zPickerOutside,true);document.addEventListener('keydown',zPickerEsc,true);},0);
+      }
+
+      editorCanvas.addEventListener('pointerdown', evt => {
+        const p = canvasPoint(evt);
+        const hit = hitTest(p);
+        editorCanvas.setPointerCapture(evt.pointerId);
+
+        // Box-select tool always draws a selection box
+        if (state.tool === 'select') {
+          state.selectionBox = { x0:p.x, y0:p.y, x1:p.x, y1:p.y, additive:p.ctrl };
+          renderEditor();
+          return;
+        }
+
+        if (hit?.type === 'line') {
+          if(hit.line==='connection'){
+            state.lineMeasure=hit.measure; state.selected=new Set([hit.measure.a.id,hit.measure.b.id]);
+            updateSelectionInfo(); renderEditor(); return;
+          }
+          state.drag={kind:'line',line:hit.line,layerIdx:hit.layerIdx,start:p,snapshot:deepClone({shots:state.shots,receivers:state.receivers,waterBottom:state.waterBottom,layers:state.layers})};
+          return;
+        }
+
+        if (hit?.type === 'object') {
+          // Selection
+          if(p.ctrl){ toggleSelection(hit.object.id); }
+          else if(!state.selected.has(hit.object.id)){ setSelection([hit.object.id],false); }
+          // Always set up drag (works in both XY and Z view)
+          const anchor=screenToWorld(p.x,p.y,hit.object);
+          state.drag={kind:'objects',startPoint:p,anchorWorld:anchor,ids:[...state.selected],snapshot:deepClone({shots:state.shots,receivers:state.receivers,waterBottom:state.waterBottom,layers:state.layers})};
+          renderEditor();
+          // In Z view with multiple stacked candidates, ALSO show picker (non-blocking)
+          if(state.view==='z'&&hit.candidates&&hit.candidates.length>1&&!p.ctrl){
+            showZPicker(hit.candidates,evt.clientX,evt.clientY);
+          }
+          return;
+        }
+
+        // Clicked on empty space in move mode:
+        // Ctrl+drag → additive box select; plain drag → replace box select
+        state.selectionBox = { x0:p.x, y0:p.y, x1:p.x, y1:p.y, additive:p.ctrl };
+        if (!p.ctrl) state.selected = new Set(); // clear immediately on plain click
+        renderEditor();
+      });
+
+      editorCanvas.addEventListener('pointermove', evt => {
+        const p = canvasPoint(evt);
+        if (state.selectionBox) {
+          state.selectionBox.x1 = p.x; state.selectionBox.y1 = p.y; renderEditor(); return;
+        }
+        const tooltip = document.getElementById('editorTooltip');
+        if (!state.drag) {
+          const hov = hitTest(p);
+          if (hov?.type === 'object') {
+            const o = hov.object;
+            const isShot = o.type === 'shot';
+            const counterparts = isShot ? state.receivers : state.shots;
+            const offsets = counterparts.map(c => Math.hypot(c.x-o.x, c.y-o.y, c.z-o.z));
+            const minOff = offsets.length ? Math.min(...offsets).toFixed(1) : '—';
+            const maxOff = offsets.length ? Math.max(...offsets).toFixed(1) : '—';
+            tooltip.style.display = 'block';
+            tooltip.style.left = (evt.clientX + 14) + 'px';
+            tooltip.style.top  = (evt.clientY - 10) + 'px';
+            tooltip.textContent = `${isShot ? '🔴 Shot' : '🔵 Receiver'}\nX: ${o.x.toFixed(1)} m  Y: ${o.y.toFixed(1)} m  Z: ${o.z.toFixed(1)} m\nMin offset: ${minOff} m  Max: ${maxOff} m`;
+          } else { tooltip.style.display = 'none'; }
+          return;
+        }
+        tooltip.style.display = 'none';
+        if (state.drag.kind === 'line') {
+          const world = screenToWorld(p.x, p.y, { x:0, y:0, z:0 });
+          if (state.drag.line === 'waterBottom') {
+            state.waterBottom = clamp(world.z, 200, (state.layers[0]?.depth ?? 6000) - 20);
+            state.receivers.forEach(r => r.z = Math.min(r.z, state.waterBottom - 1));
+            state.shots.forEach(s => s.z = Math.min(s.z, state.waterBottom - 1));
+          } else if (state.drag.line === 'layer') {
+            const li = state.drag.layerIdx ?? 0;
+            const minD = li === 0 ? state.waterBottom + 20 : state.layers[li-1].depth + 20;
+            const maxD = li < state.layers.length-1 ? state.layers[li+1].depth - 20 : 12000;
+            if (state.layers?.[li] != null) {
+              state.layers[li].depth = clamp(world.z, minD, maxD);
+              renderLayerList();
+            }
+          }
+          state.drag._moved = true;
+          renderAll();
+          return;
+        }
+        if (state.drag.kind === 'objects') {
+          const refObj = getObjectById(state.drag.ids[0]);
+          const world = screenToWorld(p.x, p.y, refObj);
+          const dx = world.x - state.drag.anchorWorld.x;
+          const dy = world.y - state.drag.anchorWorld.y;
+          const dz = world.z - state.drag.anchorWorld.z;
+          state.drag.anchorWorld = world;
+          applyDragMove(dx, dy, dz);
+          state.drag._moved = true;
+          renderAll();
+        }
+      });
+
+      function endPointer(evt) {
+        if (state.selectionBox) {
+          selectByBox(state.selectionBox, state.selectionBox.additive);
+          state.selectionBox = null;
+          renderAll();
+        }
+        if (state.drag?.snapshot && state.drag?._moved) history.push(state.drag.snapshot);
+        state.drag = null;
+        editorCanvas.releasePointerCapture?.(evt.pointerId);
+      }
+      editorCanvas.addEventListener('pointerleave', () => { document.getElementById('editorTooltip').style.display='none'; });
+      editorCanvas.addEventListener('pointerup', endPointer);
+      editorCanvas.addEventListener('pointercancel', endPointer);
+
+      document.querySelectorAll('[data-view]').forEach(btn => btn.addEventListener('click', () => {
+        state.view = btn.dataset.view;
+        document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b === btn));
+        renderEditor();
+      }));
+
+
+      waterBottomInput.addEventListener('change', () => {
+        pushHistory();
+        state.waterBottom = clamp(Number(waterBottomInput.value) || 1000, 100, 6000);
+        state.receivers.forEach(r => { if (r.z < state.waterBottom + 20) r.z = state.waterBottom + 20; });
+        renderAll();
+      });
+      waterVelInput.addEventListener('change', () => { state.waterVelocity = clamp(Number(waterVelInput.value)||1500,500,4000); renderAll(); });
+
+      document.getElementById('generateSquareBtn').addEventListener('click', () => {
+        pushHistory();
+        const inlines   = clamp(Number(document.getElementById('receiverInlinesInput').value)||4,1,100);
+        const xlines    = clamp(Number(document.getElementById('receiverXlinesInput').value)||4,1,100);
+        const ilSpacing = clamp(Number(document.getElementById('receiverILSpacingInput').value)||200,10,5000);
+        const xlSpacing = clamp(Number(document.getElementById('receiverXLSpacingInput').value)||200,10,5000);
+        const ox = Number(document.getElementById('recOriginX').value)||0;
+        const oy = Number(document.getElementById('recOriginY').value)||0;
+        const oz = Number(document.getElementById('recOriginZ').value);
+        const geom = generateSquareGeometry(inlines, xlines, ilSpacing, xlSpacing, 0, ox, oy, oz);
+        state.receivers = geom.receivers;
+        state.selected = new Set();
+        state.refConfig = deepClone({ shots: state.shots, receivers: state.receivers, waterBottom: state.waterBottom, layers: state.layers });
+        renderAll();
+      });
+      document.getElementById('appendReceiversBtn').addEventListener('click', () => {
+        pushHistory();
+        const inlines   = clamp(Number(document.getElementById('receiverInlinesInput').value)||1,1,100);
+        const xlines    = clamp(Number(document.getElementById('receiverXlinesInput').value)||1,1,100);
+        const ilSpacing = clamp(Number(document.getElementById('receiverILSpacingInput').value)||200,10,5000);
+        const xlSpacing = clamp(Number(document.getElementById('receiverXLSpacingInput').value)||200,10,5000);
+        const ox=Number(document.getElementById('recOriginX').value)||0;
+        const oy=Number(document.getElementById('recOriginY').value)||0;
+        const oz=Number(document.getElementById('recOriginZ').value);
+        const geom=generateSquareGeometry(inlines,xlines,ilSpacing,xlSpacing,0,ox,oy,oz);
+        const tol=Math.min(ilSpacing,xlSpacing)*0.4;
+        const unique=geom.receivers.filter(nr=>!state.receivers.some(r=>Math.hypot(r.x-nr.x,r.y-nr.y,r.z-nr.z)<tol));
+        const dupes=geom.receivers.length-unique.length;
+        state.receivers=[...state.receivers,...unique];
+        state.selected=new Set();
+        state.refConfig=deepClone({shots:state.shots,receivers:state.receivers,waterBottom:state.waterBottom,layers:state.layers});
+        if(dupes>0) showToast(`⚠️ ${dupes} overlapping receiver${dupes>1?'s':''} removed`);
+        renderAll();
+      });
+
+      document.getElementById('randomBottomBtn').addEventListener('click', () => {
+        pushHistory();
+        const inlines   = clamp(Number(document.getElementById('receiverInlinesInput').value)||4,1,100);
+        const xlines    = clamp(Number(document.getElementById('receiverXlinesInput').value)||4,1,100);
+        const ilSpacing = clamp(Number(document.getElementById('receiverILSpacingInput').value)||200,10,5000);
+        const xlSpacing = clamp(Number(document.getElementById('receiverXLSpacingInput').value)||200,10,5000);
+        const wb = state.waterBottom;
+        const minZ = Math.max(50, wb * 0.3);
+        const maxZ = wb - 50;
+        const receivers = [];
+        for (let iy=0; iy<xlines; iy++) {
+          for (let ix=0; ix<inlines; ix++) {
+            const x = -((inlines-1)*ilSpacing)/2 + ix*ilSpacing;
+            const y = -((xlines-1)*xlSpacing)/2  + iy*xlSpacing;
+            const z = clamp(minZ + Math.random() * (maxZ - minZ), 50, wb - 1);
+            receivers.push({id:uid('r'), type:'receiver', x, y, z});
+          }
+        }
+        state.receivers = receivers;
+        // Adapt WB to sit just below the deepest receiver
+        const deepestZ = Math.max(...receivers.map(r => r.z));
+        state.waterBottom = Math.max(state.waterBottom, deepestZ + 50);
+        state.selected = new Set();
+        state.refConfig = deepClone({ shots: state.shots, receivers: state.receivers, waterBottom: state.waterBottom, layers: state.layers });
+        renderAll();
+      });
+
+      // ── Move shots ──────────────────────────────────────────────────
+      document.getElementById('moveShotsBtn').addEventListener('click', () => {
+        const dx = Number(document.getElementById('shotDX').value) || 0;
+        const dy = Number(document.getElementById('shotDY').value) || 0;
+        const dz = Number(document.getElementById('shotDZ').value) || 0;
+        if (dx === 0 && dy === 0 && dz === 0) return;
+        pushHistory();
+        const selectedShots = [...state.selected].filter(id => state.shots.find(s => s.id === id));
+        const targets = selectedShots.length > 0
+          ? state.shots.filter(s => selectedShots.includes(s.id))
+          : state.shots;
+        targets.forEach(s => { s.x += dx; s.y += dy; s.z += dz; });
+        document.getElementById('shotDX').value = 0;
+        document.getElementById('shotDY').value = 0;
+        document.getElementById('shotDZ').value = 0;
+        renderAll();
+      });
+
+      // ── Move receivers ───────────────────────────────────────────────
+      document.getElementById('moveReceiversBtn').addEventListener('click', () => {
+        const dx = Number(document.getElementById('recDX').value) || 0;
+        const dy = Number(document.getElementById('recDY').value) || 0;
+        const dz = Number(document.getElementById('recDZ').value) || 0;
+        if (dx === 0 && dy === 0 && dz === 0) return;
+        pushHistory();
+        const selectedRecs = [...state.selected].filter(id => state.receivers.find(r => r.id === id));
+        const targets = selectedRecs.length > 0
+          ? state.receivers.filter(r => selectedRecs.includes(r.id))
+          : state.receivers;
+        targets.forEach(r => { r.x += dx; r.y += dy; r.z += dz; });
+        document.getElementById('recDX').value = 0;
+        document.getElementById('recDY').value = 0;
+        document.getElementById('recDZ').value = 0;
+        renderAll();
+      });
+
+      function showToast(msg) {
+        const c=document.getElementById('toastContainer'); if(!c) return;
+        const el=document.createElement('div');
+        el.style.cssText='background:var(--color-orange);color:#fff;padding:9px 16px;border-radius:var(--radius-lg);font-size:var(--text-xs);font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.18);opacity:1;transition:opacity 0.4s;pointer-events:none;max-width:320px;';
+        el.textContent=msg; c.appendChild(el);
+        setTimeout(()=>{el.style.opacity='0';setTimeout(()=>el.remove(),420);},3600);
+      }
+
+      document.getElementById('coverageToggleBtn').addEventListener('click',()=>{
+        state.showCoverage=!state.showCoverage;
+        const btn=document.getElementById('coverageToggleBtn');
+        btn.textContent=state.showCoverage?'Coverage on':'Coverage off';
+        btn.style.opacity=state.showCoverage?'1':'0.45';
+        renderEditor();
+      });
+
+      document.getElementById('generateShotsBtn').addEventListener('click', () => {
+        pushHistory();
+        const inlines   = clamp(Number(document.getElementById('shotInlinesInput').value)||1,1,100);
+        const xlines    = clamp(Number(document.getElementById('shotXlinesInput').value)||1,1,100);
+        const ilSpacing = clamp(Number(document.getElementById('shotILSpacingInput').value)||200,10,5000);
+        const xlSpacing = clamp(Number(document.getElementById('shotXLSpacingInput').value)||200,10,5000);
+        const ox = Number(document.getElementById('shotOriginX').value)||0;
+        const oy = Number(document.getElementById('shotOriginY').value)||0;
+        const oz = Number(document.getElementById('shotOriginZ').value);
+        const geom = generateShotsGeometry(inlines, xlines, ilSpacing, xlSpacing, 0, ox, oy, oz);
+        state.shots = geom.shots;
+        state.selected = new Set();
+        state.refConfig = deepClone({ shots: state.shots, receivers: state.receivers, waterBottom: state.waterBottom, layers: state.layers });
+        renderAll();
+      });
+      document.getElementById('appendShotsBtn').addEventListener('click', () => {
+        pushHistory();
+        const inlines   = clamp(Number(document.getElementById('shotInlinesInput').value)||1,1,100);
+        const xlines    = clamp(Number(document.getElementById('shotXlinesInput').value)||1,1,100);
+        const ilSpacing = clamp(Number(document.getElementById('shotILSpacingInput').value)||200,10,5000);
+        const xlSpacing = clamp(Number(document.getElementById('shotXLSpacingInput').value)||200,10,5000);
+        const ox=Number(document.getElementById('shotOriginX').value)||0;
+        const oy=Number(document.getElementById('shotOriginY').value)||0;
+        const oz=Number(document.getElementById('shotOriginZ').value);
+        const geom=generateShotsGeometry(inlines,xlines,ilSpacing,xlSpacing,0,ox,oy,oz);
+        const tol=Math.min(ilSpacing,xlSpacing)*0.4;
+        const unique=geom.shots.filter(ns=>!state.shots.some(s=>Math.hypot(s.x-ns.x,s.y-ns.y,s.z-ns.z)<tol));
+        const dupes=geom.shots.length-unique.length;
+        state.shots=[...state.shots,...unique];
+        state.selected=new Set();
+        state.refConfig=deepClone({shots:state.shots,receivers:state.receivers,waterBottom:state.waterBottom,layers:state.layers});
+        if(dupes>0) showToast(`⚠️ ${dupes} overlapping shot${dupes>1?'s':''} removed`);
+        renderAll();
+      });
+      
+      
+      document.getElementById('removeSelectedBtn').addEventListener('click', () => {
+        pushHistory();
+        const ids = state.selected;
+        state.shots = state.shots.filter(s => !ids.has(s.id));
+        state.receivers = state.receivers.filter(r => !ids.has(r.id));
+        state.selected = new Set();
+        state.refConfig = deepClone({ shots: state.shots, receivers: state.receivers, waterBottom: state.waterBottom, layers: state.layers });
+        renderAll();
+      });
+      document.getElementById('setCurrentAsInitialBtn').addEventListener('click', () => setInitialFromCurrent());
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        setDefaultState(); renderAll();
+        setTimeout(()=>{
+          const rows=document.getElementById('gatherFilterRows');
+          if(!rows) return;
+          rows.innerHTML='';
+          const vals=getFilterVals('shot_xl');
+          const best=vals.reduce((a,b)=>Math.abs(b)<Math.abs(a)?b:a, vals[0]??0);
+          rows.appendChild(buildFilterRow({type:'shot_xl',val:best}));
+          applyAllGatherFilters();
+          {}
+        },50);
+      });
+
+      function applyGatherFiltersToGeom(shots, receivers, filters) {
+        const tol = 1;
+        for (const f of (filters || [])) {
+          const { type, val } = f;
+          if      (type === 'shot_il') shots     = shots.filter(s => Math.abs(Math.round(s.x)-val)<=tol);
+          else if (type === 'shot_xl') shots     = shots.filter(s => Math.abs(Math.round(s.y)-val)<=tol);
+          else if (type === 'rec_il')  receivers = receivers.filter(r => Math.abs(Math.round(r.x)-val)<=tol);
+          else if (type === 'rec_xl')  receivers = receivers.filter(r => Math.abs(Math.round(r.y)-val)<=tol);
+        }
+        return { shots, receivers };
+      }
+      function filteredGeom() {
+        const filters = (state.gatherFilters && state.gatherFilters.length) ? state.gatherFilters
+                      : (state.gatherFilter ? [state.gatherFilter] : []);
+        if (!filters.length) return { shots: state.shots, receivers: state.receivers };
+        return applyGatherFiltersToGeom([...state.shots], [...state.receivers], filters);
+      }
+
+
+            function filteredInitialGeom() {
+        const filters = (state.gatherFilters && state.gatherFilters.length) ? state.gatherFilters
+                      : (state.gatherFilter ? [state.gatherFilter] : []);
+        if (!filters.length) return { shots: state.initialModel.shots, receivers: state.initialModel.receivers };
+        return applyGatherFiltersToGeom([...state.initialModel.shots], [...state.initialModel.receivers], filters);
+      }
+
+
+      function selFilter(shots, recs) {
+        if (!state.selected || !state.selected.size) return { shots: [], receivers: [] };
+        const s = shots.filter(x => state.selected.has(x.id));
+        const r = recs.filter(x => state.selected.has(x.id));
+        return { shots: s.length ? s : [], receivers: r.length ? r : [] };
+      }
+      const plotMap = {
+        plotInitial: () => { const g=filteredInitialGeom(); const af=selFilter(g.shots,g.receivers); return buildSynthetic({...state.initialModel,shots:g.shots,receivers:g.receivers,ghosts:!!state.ghosts},af); },
+        plotUpdated: () => { const g=filteredGeom(); const af=selFilter(g.shots,g.receivers); return buildSynthetic({shots:g.shots,receivers:g.receivers,waterBottom:state.waterBottom,waterVelocity:state.waterVelocity,layers:state.layers,ghosts:!!state.ghosts},af); },
+        plotDiff: () => { const gi=filteredInitialGeom(),gc=filteredGeom(); const afi=selFilter(gi.shots,gi.receivers),afc=selFilter(gc.shots,gc.receivers); return diffSynthetic(buildSynthetic({...state.initialModel,shots:gi.shots,receivers:gi.receivers,ghosts:!!state.ghosts},afi),buildSynthetic({shots:gc.shots,receivers:gc.receivers,waterBottom:state.waterBottom,waterVelocity:state.waterVelocity,layers:state.layers,ghosts:!!state.ghosts},afc)); }
+      };
+      document.getElementById('plotRose').addEventListener('click', () => {
+        document.getElementById('modalTitle').textContent = 'Azimuth & offset rose';
+        modal.classList.add('open');
+        drawRosePlotOn(modalCanvas);
+      });
+      document.getElementById('plotCMP').addEventListener('click', () => {
+        document.getElementById('modalTitle').textContent = 'CMP fold map';
+        modal.classList.add('open');
+        drawCMPFoldOn(modalCanvas);
+      });
+      [plotInitial, plotUpdated, plotDiff].forEach(canvas => canvas.addEventListener('click', () => {
+        const id = canvas.id;
+        state.modalPlot = id;
+        modalZoom = null;
+        document.getElementById('modalTitle').textContent = canvas.parentElement.querySelector('h3').textContent;
+        modal.classList.add('open');
+        redrawModal();
+      }));
+
+      const xAxisSelect = document.getElementById('xAxisSelect');
+      xAxisSelect.addEventListener('change', () => {
+        state.xAxis = xAxisSelect.value;
+        const label = xAxisLabels[state.xAxis] || 'Offset (m)';
+        const metaEl = document.getElementById('plotXMeta');
+        if (metaEl) metaEl.textContent = label.replace(' (m)', '') + ' x Travel time';
+        refreshPlots();
+      });
+
+      
+      // ── Multi-filter gather system ──────────────────────────────────────────
+      const FILTER_TYPES = [
+        { value: 'all',     label: 'All shots · all receivers' },
+        { value: 'shot_il', label: 'Shot IL' },
+        { value: 'shot_xl', label: 'Shot XL' },
+        { value: 'rec_il',  label: 'Rec IL' },
+        { value: 'rec_xl',  label: 'Rec XL' },
+      ];
+
+      function getFilterVals(type) {
+        const tol = 1;
+        if (type === 'shot_il') return [...new Set(state.shots.map(s => Math.round(s.x)))].sort((a,b)=>a-b);
+        if (type === 'shot_xl') return [...new Set(state.shots.map(s => Math.round(s.y)))].sort((a,b)=>a-b);
+        if (type === 'rec_il')  return [...new Set(state.receivers.map(r => Math.round(r.x)))].sort((a,b)=>a-b);
+        if (type === 'rec_xl')  return [...new Set(state.receivers.map(r => Math.round(r.y)))].sort((a,b)=>a-b);
+        return [];
+      }
+
+      function buildFilterRow(filterObj) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:4px;align-items:center;';
+
+        const typeSelect = document.createElement('select');
+        typeSelect.style.cssText = 'height:26px;border-radius:var(--radius-md);border:1px solid var(--color-primary-border);background:var(--color-surface);color:var(--color-text);padding:0 0.4rem;font-size:var(--text-xs);font-weight:500;';
+        FILTER_TYPES.filter(t => t.value !== 'all').forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.value; opt.textContent = t.label;
+          if (filterObj && filterObj.type === t.value) opt.selected = true;
+          typeSelect.appendChild(opt);
+        });
+
+        const valSelect = document.createElement('select');
+        valSelect.style.cssText = 'height:26px;border-radius:var(--radius-md);border:1px solid var(--color-primary-border);background:var(--color-surface);color:var(--color-text);padding:0 0.4rem;font-size:var(--text-xs);min-width:90px;';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '✕';
+        removeBtn.style.cssText = 'height:24px;width:24px;border-radius:var(--radius-md);border:1px solid var(--color-border);background:transparent;color:var(--color-text-muted);cursor:pointer;font-size:11px;';
+
+        function populateVals(keepVal) {
+          const type = typeSelect.value;
+          const vals = getFilterVals(type);
+          valSelect.innerHTML = vals.map(v => `<option value="${v}"${v===keepVal?' selected':''}>${type.startsWith('shot')?'Shot':'Rec'} ${type.endsWith('il')?'IL':'XL'} = ${v} m</option>`).join('');
+        }
+        populateVals(filterObj?.val);
+
+        typeSelect.addEventListener('change', () => { populateVals(); applyAllGatherFilters(); });
+        valSelect.addEventListener('change', applyAllGatherFilters);
+        removeBtn.addEventListener('click', () => { row.remove(); applyAllGatherFilters(); });
+
+        row._getFilter = () => ({ type: typeSelect.value, val: parseInt(valSelect.value) });
+        row.appendChild(typeSelect);
+        row.appendChild(valSelect);
+        row.appendChild(removeBtn);
+        return row;
+      }
+
+      function applyAllGatherFilters() {
+        const rows = Array.from(document.getElementById('gatherFilterRows').children);
+        state.gatherFilters = rows.map(r => r._getFilter ? r._getFilter() : null).filter(Boolean);
+        state.gatherFilter = state.gatherFilters[0] || null; // backward compat
+        const badge = document.getElementById('gatherFilterBadge');
+        if (badge) {
+          if (state.gatherFilters.length) {
+            badge.textContent = state.gatherFilters.map(f => {
+              const dim = f.type.endsWith('il') ? 'IL' : 'XL';
+              const pfx = f.type.startsWith('shot') ? 'Shot' : 'Rec';
+              return `${pfx} ${dim}=${f.val}`;
+            }).join(' · ');
+            badge.style.display = 'inline';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+        refreshPlots();
+        if (typeof renderEditor === 'function') renderEditor();
+      }
+
+      function initGatherFilterUI() {
+        const rows = document.getElementById('gatherFilterRows');
+        if (!rows) return;
+        rows.innerHTML = '';
+        (state.gatherFilters || []).forEach(f => rows.appendChild(buildFilterRow(f)));
+        applyAllGatherFilters();
+      }
+
+      document.getElementById('addGatherFilterBtn')?.addEventListener('click', () => {
+        const rows = document.getElementById('gatherFilterRows');
+        rows.appendChild(buildFilterRow(null));
+        applyAllGatherFilters();
+      });
+
+      // legacy compat: expose buildGatherFilterOptions as no-op
+      function buildGatherFilterOptions() { initGatherFilterUI(); }
+      function applyGatherFilter() { applyAllGatherFilters(); }
+
+      document.getElementById('xMinInput').addEventListener('change', () => refreshPlots());
+      document.getElementById('xMaxInput').addEventListener('change', () => refreshPlots());
+
+      // Gain slider
+      document.getElementById('gainInput').addEventListener('input', function() {
+        state.gain = parseFloat(this.value);
+        document.getElementById('gainLabel').textContent = '×' + state.gain.toFixed(1);
+        refreshPlots();
+      });
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        renderAll();
+        if (modal.classList.contains('open') && state.modalPlot) drawPlot(modalCanvas, plotMap[state.modalPlot]());
+      });
+
+      window.addEventListener('resize', () => {
+        renderAll();
+        if (modal.classList.contains('open') && state.modalPlot) drawPlot(modalCanvas, plotMap[state.modalPlot]());
+      });
+
+      // ══════════════════════════════════════════════════════════════════════
+      // ROSE PLOT
+      // ══════════════════════════════════════════════════════════════════════
+      function drawRosePlotOn(canvas) {
+        if (!canvas) return;
+        const cssW = canvas.offsetWidth||520, cssH = canvas.offsetHeight||280;
+        canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        const w = cssW, h = cssH;
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = themeVar('--plot-bg'); ctx.fillRect(0,0,w,h);
+
+        const cx = w/2, cy = h/2, R = Math.min(w,h)/2 - 30;
+        const { shots, receivers: recs } = activeGeom();
+        if (!shots.length || !recs.length) {
+          ctx.fillStyle = themeVar('--color-text-muted');
+          ctx.font = '13px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText('No geometry', cx, cy); return;
+        }
+
+        // Bin azimuths 0-360 into 36 bins (10° each), weight by 1/offset
+        const BINS = 36, binSize = 360/BINS;
+        const counts = new Float64Array(BINS);
+        const maxOff = Math.max(...shots.flatMap(s => recs.map(r => Math.hypot(r.x-s.x,r.y-s.y)))) || 1;
+
+        for (const s of shots) for (const r of recs) {
+          const az = ((Math.atan2(r.x-s.x, r.y-s.y) * 180/Math.PI) + 360) % 360;
+          const off = Math.hypot(r.x-s.x, r.y-s.y);
+          const bin = Math.floor(az / binSize) % BINS;
+          counts[bin] += off / maxOff;
+          // also opposite azimuth (reciprocal)
+          counts[(bin + BINS/2) % BINS] += off / maxOff;
+        }
+        const maxC = Math.max(...counts) || 1;
+
+        // Draw grid circles
+        ctx.strokeStyle = themeVar('--plot-grid'); ctx.lineWidth = 1;
+        for (let i=1; i<=4; i++) {
+          ctx.beginPath(); ctx.arc(cx,cy,R*i/4,0,Math.PI*2); ctx.stroke();
+        }
+        // Cardinal lines
+        ['N','E','S','W'].forEach((lbl,i) => {
+          const a = i*Math.PI/2 - Math.PI/2;
+          ctx.beginPath(); ctx.moveTo(cx,cy);
+          ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R); ctx.stroke();
+          ctx.fillStyle = themeVar('--color-text-muted');
+          ctx.font = '11px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(lbl, cx+Math.cos(a)*(R+14), cy+Math.sin(a)*(R+14));
+        });
+
+        // Draw rose petals
+        const primary = themeVar('--color-primary');
+        ctx.fillStyle = primary.replace(')',',0.6)').replace('rgb','rgba');
+        ctx.strokeStyle = primary; ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        for (let b=0; b<BINS; b++) {
+          const a0 = (b*binSize - 90 - binSize/2) * Math.PI/180;
+          const a1 = (b*binSize - 90 + binSize/2) * Math.PI/180;
+          const r2 = R * counts[b] / maxC;
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, r2, a0, a1);
+          ctx.lineTo(cx, cy);
+        }
+        ctx.fill(); ctx.stroke();
+
+        // Title
+        ctx.fillStyle = themeVar('--color-text-muted');
+        ctx.font = '11px Inter,sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
+        ctx.fillText(`${shots.length} shots × ${recs.length} receivers`, 6, 4);
+      }
+
+      // ══════════════════════════════════════════════════════════════════════
+      // CMP FOLD MAP
+      // ══════════════════════════════════════════════════════════════════════
+      function drawCMPFoldOn(canvas) {
+        if (!canvas) return;
+        const binSize = Math.max(10, Number(document.getElementById('cmpBinInput').value)||100);
+        const cssW = canvas.offsetWidth||520, cssH = canvas.offsetHeight||280;
+        canvas.width = Math.round(cssW*dpr); canvas.height = Math.round(cssH*dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        const w = cssW, h = cssH;
+        ctx.clearRect(0,0,w,h); ctx.fillStyle = themeVar('--plot-bg'); ctx.fillRect(0,0,w,h);
+
+        const { shots, receivers: recs } = activeGeom();
+        if (!shots.length || !recs.length) {
+          ctx.fillStyle = themeVar('--color-text-muted');
+          ctx.font='13px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText('No geometry', w/2, h/2); return;
+        }
+
+        // Compute CMPs
+        const foldMap = new Map();
+        for (const s of shots) for (const r of recs) {
+          const mx = (s.x+r.x)/2, my = (s.y+r.y)/2;
+          const bx = Math.floor(mx/binSize), by = Math.floor(my/binSize);
+          const key = `${bx},${by}`;
+          foldMap.set(key, (foldMap.get(key)||0) + 1);
+        }
+        if (!foldMap.size) return;
+
+        const keys = [...foldMap.keys()].map(k=>k.split(',').map(Number));
+        const bxs = keys.map(k=>k[0]), bys = keys.map(k=>k[1]);
+        const minBX=Math.min(...bxs), maxBX=Math.max(...bxs);
+        const minBY=Math.min(...bys), maxBY=Math.max(...bys);
+        const nX = maxBX-minBX+1, nY = maxBY-minBY+1;
+        const maxFold = Math.max(...foldMap.values());
+
+        const margin = {l:56,r:12,t:12,b:40};
+        const pw = w-margin.l-margin.r, ph = h-margin.t-margin.b;
+        const cellW = pw/Math.max(nX,1), cellH = ph/Math.max(nY,1);
+
+        // Color scale: 0=plot-bg, max=primary
+        const toColor = v => {
+          const t = v/maxFold;
+          const r2 = Math.round(lerp(22,4,t)), g2=Math.round(lerp(24,108,t)), b2=Math.round(lerp(27,115,t));
+          return `rgb(${r2},${g2},${b2})`;
+        };
+
+        for (const [key, fold] of foldMap) {
+          const [bx,by] = key.split(',').map(Number);
+          const px = margin.l + (bx-minBX)*cellW;
+          const py = margin.t + (maxBY-by)*cellH;
+          ctx.fillStyle = toColor(fold);
+          ctx.fillRect(px, py, cellW+0.5, cellH+0.5);
+          const fontSize = Math.min(11, cellW*0.55, cellH*0.55);
+          if (fontSize >= 5) {
+            ctx.fillStyle = '#fff';
+            ctx.font = `${fontSize}px Inter,sans-serif`;
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.fillText(fold, px+cellW/2, py+cellH/2);
+          }
+        }
+
+        // Axes
+        ctx.strokeStyle = themeVar('--plot-axis'); ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(margin.l,margin.t); ctx.lineTo(margin.l,margin.t+ph);
+        ctx.lineTo(margin.l+pw,margin.t+ph); ctx.stroke();
+
+        ctx.fillStyle = themeVar('--color-text'); ctx.font='11px Inter,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText('CMP X (m)', margin.l+pw/2, h-14);
+        ctx.save(); ctx.translate(12, margin.t+ph/2); ctx.rotate(-Math.PI/2);
+        ctx.textBaseline='top'; ctx.fillText('CMP Y (m)', 0, 0); ctx.restore();
+
+        // Axis tick labels
+        ctx.fillStyle = themeVar('--color-text-muted'); ctx.font='10px Inter,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='top';
+        [0, Math.floor(nX/2), nX-1].forEach(i => {
+          const val = (minBX+i)*binSize + binSize/2;
+          ctx.fillText(Math.round(val), margin.l+i*cellW+cellW/2, margin.t+ph+4);
+        });
+        ctx.textAlign='right'; ctx.textBaseline='middle';
+        [0, Math.floor(nY/2), nY-1].forEach(i => {
+          const val = (maxBY-i)*binSize + binSize/2;
+          ctx.fillText(Math.round(val), margin.l-4, margin.t+i*cellH+cellH/2);
+        });
+
+        // Max fold label
+        ctx.font='bold 11px Inter,sans-serif';
+        ctx.textAlign='right'; ctx.textBaseline='top';
+        const _mft = `Max fold: ${maxFold}`;
+        const _mfw = ctx.measureText(_mft).width;
+        ctx.fillStyle='rgba(255,255,255,0.75)';
+        ctx.fillRect(w-margin.r-_mfw-4, margin.t-1, _mfw+8, 14);
+        ctx.fillStyle='#111';
+        ctx.fillText(_mft, w-margin.r, margin.t);
+      }
+
+      function drawRosePlot() { drawRosePlotOn(document.getElementById('plotRose')); }
+      function drawCMPFold()  { drawCMPFoldOn(document.getElementById('plotCMP')); }
+      document.getElementById('cmpBinInput').addEventListener('input', drawCMPFold);
+
+      // ══════════════════════════════════════════════════════════════════════
+      // EXPORT CSV
+      // ══════════════════════════════════════════════════════════════════════
+      document.getElementById('exportGeomBtn').addEventListener('click', () => {
+        const rows = ['type,x,y,z'];
+        for (const s of state.shots)
+          rows.push(`shot,${s.x.toFixed(2)},${s.y.toFixed(2)},${s.z.toFixed(2)}`);
+        for (const r of state.receivers)
+          rows.push(`receiver,${r.x.toFixed(2)},${r.y.toFixed(2)},${r.z.toFixed(2)}`);
+        const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'seismic_geometry.csv';
+        a.click();
+      });
+
+      // ══════════════════════════════════════════════════════════════════════
+      // IMPORT CSV
+      // ══════════════════════════════════════════════════════════════════════
+      document.getElementById('importGeomFile').addEventListener('change', function() {
+        const file = this.files[0]; if (!file) return;
+        const status = document.getElementById('importStatus');
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            const lines = e.target.result.trim().split(/\r?\n/);
+            const header = lines[0].toLowerCase().split(',').map(s=>s.trim());
+            const shots=[], receivers=[];
+
+            // Format A: type, x, y, z
+            if (header.includes('type') && header.includes('x')) {
+              const ti=header.indexOf('type'), xi=header.indexOf('x'),
+                    yi=header.indexOf('y'), zi=header.indexOf('z');
+              for (let i=1;i<lines.length;i++) {
+                const c = lines[i].split(',').map(s=>s.trim());
+                if (c.length < 4) continue;
+                const type=c[ti].toLowerCase(), x=+c[xi], y=+c[yi], z=+c[zi];
+                if (type.startsWith('s')) shots.push({id:uid('s'),type:'shot',x,y,z});
+                else receivers.push({id:uid('r'),type:'receiver',x,y,z});
+              }
+            }
+            // Format B: shot_x, shot_y, shot_z, rec_x, rec_y, rec_z
+            else if (header.some(h=>h.includes('shot_x')||h.includes('sx'))) {
+              const findCol = (...names) => { for(const n of names){const i=header.findIndex(h=>h.includes(n)); if(i>=0) return i;} return -1; };
+              const sxi=findCol('shot_x','sx'), syi=findCol('shot_y','sy'), szi=findCol('shot_z','sz');
+              const rxi=findCol('rec_x','rx'), ryi=findCol('rec_y','ry'), rzi=findCol('rec_z','rz');
+              const seenS=new Map(), seenR=new Map();
+              for (let i=1;i<lines.length;i++) {
+                const c=lines[i].split(',').map(s=>s.trim());
+                if(sxi>=0){const k=`${c[sxi]},${c[syi]},${c[szi]}`;
+                  if(!seenS.has(k)){seenS.set(k,1);shots.push({id:uid('s'),type:'shot',x:+c[sxi],y:+c[syi],z:+c[szi]});}}
+                if(rxi>=0){const k=`${c[rxi]},${c[ryi]},${c[rzi]}`;
+                  if(!seenR.has(k)){seenR.set(k,1);receivers.push({id:uid('r'),type:'receiver',x:+c[rxi],y:+c[ryi],z:+c[rzi]});}}
+              }
+            }
+
+            if (!shots.length && !receivers.length) throw new Error('No valid rows found');
+            pushHistory();
+            if (shots.length) { state.shots = shots; }
+            if (receivers.length) { state.receivers = receivers; }
+            state.selected = new Set();
+            state.refConfig = deepClone({shots:state.shots,receivers:state.receivers,waterBottom:state.waterBottom,layers:state.layers});
+            renderAll();
+            status.textContent = `✓ Imported ${shots.length} shots, ${receivers.length} receivers`;
+            status.style.color = 'var(--color-green)';
+          } catch(err) {
+            status.textContent = '✗ Import failed: ' + err.message;
+            status.style.color = 'var(--color-red)';
+          }
+          this.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+
+
+      // Ctrl+Z undo
+      document.addEventListener('keydown', evt => {
+        if ((evt.ctrlKey || evt.metaKey) && evt.key === 'z') { evt.preventDefault(); undoHistory(); }
+      });
+
+      buildPulse();
+      setDefaultState();
+      renderAll();
+      // D// No default filter — show all shots and receivers on startup
+      setTimeout(() => { applyAllGatherFilters(); }, 50);
+
+      // ════════════════════════════════════════════════════════════════
+      // TUTORIAL MODE
+      // ════════════════════════════════════════════════════════════════
+      const tutSteps = [
+        {
+          title: "Welcome to the Seismic Acquisition Simulator!",
+          body: "This tool lets you explore how seismic reflection surveys work — from placing shots and receivers on the surface, to seeing the reflected signals recorded underground.\n\nClick <strong>Next</strong> to begin the guided tour.",
+          target: null
+        },
+        {
+          title: "🔴 Shots & 🔵 Receivers",
+          body: "The geometry editor shows a cross-section of the Earth. <strong>Red dots</strong> are <em>shots</em> — energy sources that send seismic waves into the ground. <strong>Blue dots</strong> are <em>receivers</em> (hydrophones/geophones) that record ground motion.\n\nUse the <strong>Shots</strong> and <strong>Receivers</strong> panels to generate arrays, set an <strong>origin</strong> (X, Y, Z) to position them anywhere in space, and use the <strong>ΔX / ΔY / ΔZ</strong> move controls to translate selected elements — or the whole group if nothing is selected.",
+          target: 'editorCanvas'
+        },
+        {
+          title: "🗺️ XY View vs Depth View",
+          body: "The geometry editor has two views, toggled top-left:<br><br><strong>XY (top-down)</strong> — a map: Inline (X) vs Crossline (Y). You see where shots and receivers sit on the seafloor / seabed surface plane.<br><br><strong>Depth (Z)</strong> — a cross-section: Inline vs Depth. Here you can see burial depths and drag the dashed interface lines (water bottom, reflectors) up/down.<svg viewBox=&quot;0 0 340 138&quot; width=&quot;100%&quot; style=&quot;max-width:340px;display:block;margin:8px auto 0;font-family:-apple-system,sans-serif;&quot;><rect x=&quot;4&quot; y=&quot;4&quot; width=&quot;158&quot; height=&quot;130&quot; rx=&quot;6&quot; fill=&quot;none&quot; stroke=&quot;#046c73&quot; stroke-width=&quot;1.5&quot;/><text x=&quot;83&quot; y=&quot;17&quot; fill=&quot;#046c73&quot; font-size=&quot;9&quot; text-anchor=&quot;middle&quot; font-weight=&quot;bold&quot;>XY VIEW (top-down)</text><text x=&quot;83&quot; y=&quot;29&quot; fill=&quot;#888&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>Inline (X) →</text><text x=&quot;14&quot; y=&quot;80&quot; fill=&quot;#888&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot; transform=&quot;rotate(-90,14,80)&quot;>Crossline (Y)</text><circle cx=&quot;55&quot; cy=&quot;60&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;83&quot; cy=&quot;60&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;111&quot; cy=&quot;60&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;55&quot; cy=&quot;85&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;83&quot; cy=&quot;85&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;111&quot; cy=&quot;85&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><polygon points=&quot;55,105 62,115 48,115&quot; fill=&quot;#c96a10&quot;/><polygon points=&quot;83,105 90,115 76,115&quot; fill=&quot;#c96a10&quot;/><polygon points=&quot;111,105 118,115 104,115&quot; fill=&quot;#c96a10&quot;/><text x=&quot;83&quot; y=&quot;130&quot; fill=&quot;#c96a10&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>▲ shots</text><text x=&quot;83&quot; y=&quot;54&quot; fill=&quot;#046c73&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>● receivers</text><rect x=&quot;178&quot; y=&quot;4&quot; width=&quot;158&quot; height=&quot;130&quot; rx=&quot;6&quot; fill=&quot;none&quot; stroke=&quot;#b07d3a&quot; stroke-width=&quot;1.5&quot;/><text x=&quot;257&quot; y=&quot;17&quot; fill=&quot;#b07d3a&quot; font-size=&quot;9&quot; text-anchor=&quot;middle&quot; font-weight=&quot;bold&quot;>DEPTH VIEW (cross-section)</text><text x=&quot;257&quot; y=&quot;29&quot; fill=&quot;#888&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>Inline (X) →</text><text x=&quot;188&quot; y=&quot;80&quot; fill=&quot;#888&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot; transform=&quot;rotate(-90,188,80)&quot;>Depth</text><line x1=&quot;183&quot; y1=&quot;40&quot; x2=&quot;332&quot; y2=&quot;40&quot; stroke=&quot;#4a9eff&quot; stroke-width=&quot;1.2&quot; stroke-dasharray=&quot;4,2&quot;/><text x=&quot;290&quot; y=&quot;37&quot; fill=&quot;#4a9eff&quot; font-size=&quot;7.5&quot;>z = 0 (sea surface)</text><line x1=&quot;183&quot; y1=&quot;80&quot; x2=&quot;332&quot; y2=&quot;80&quot; stroke=&quot;#b07d3a&quot; stroke-width=&quot;1.8&quot; stroke-dasharray=&quot;4,2&quot;/><text x=&quot;290&quot; y=&quot;77&quot; fill=&quot;#b07d3a&quot; font-size=&quot;7.5&quot;>Water bottom</text><line x1=&quot;183&quot; y1=&quot;112&quot; x2=&quot;332&quot; y2=&quot;112&quot; stroke=&quot;#3a7828&quot; stroke-width=&quot;1.8&quot; stroke-dasharray=&quot;4,2&quot;/><text x=&quot;290&quot; y=&quot;109&quot; fill=&quot;#3a7828&quot; font-size=&quot;7.5&quot;>Reflector</text><polygon points=&quot;210,40 217,48 203,48&quot; fill=&quot;#c96a10&quot;/><circle cx=&quot;255&quot; cy=&quot;40&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;295&quot; cy=&quot;55&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><text x=&quot;210&quot; y=&quot;60&quot; fill=&quot;#888&quot; font-size=&quot;7&quot; text-anchor=&quot;middle&quot;>drag lines</text><text x=&quot;210&quot; y=&quot;69&quot; fill=&quot;#888&quot; font-size=&quot;7&quot; text-anchor=&quot;middle&quot;>↕ to move</text></svg>",
+          target: "viewToggleBar"
+        },
+        {
+          title: "📐 Offset & Geometry",
+          body: "The distance between a shot and a receiver is called the <strong>offset</strong>. Near-offset traces carry shallow information; far-offset traces reach deeper. A full spread of offsets is essential for imaging at all depths.\n\nYou can also switch the plot x-axis between offset, shot X/Y, or receiver X/Y to explore different gather types.",
+          target: 'editorCanvas'
+        },
+        {
+          title: "🖱️ Selecting & Moving Elements",
+          body: "The editor supports precise interactive editing of any node:<br><br>• <strong>Click</strong> a node to select it — coordinates appear in the info box<br>• <strong>Ctrl+click</strong> to add to selection (multi-select)<br>• <strong>Box-drag</strong> on empty space to rubber-band select a region<br>• <strong>Drag</strong> a selected node to move it, or use the <strong>Move Δ fields</strong> in the sidebar for exact offsets<br>• In <strong>Depth view</strong> drag the dashed WB / reflector lines to change their depth<br>• <strong>Ctrl+Z</strong> undoes the last action<br><br>When exactly <strong>two nodes are selected</strong>, the editor draws a measurement line and shows the 3D distance — handy for checking receiver spacing or maximum offset.<svg viewBox=&quot;0 0 280 80&quot; width=&quot;100%&quot; style=&quot;max-width:280px;display:block;margin:8px auto 0;font-family:-apple-system,sans-serif;&quot;><circle cx=&quot;70&quot; cy=&quot;40&quot; r=&quot;9&quot; fill=&quot;none&quot; stroke=&quot;#a83850&quot; stroke-width=&quot;2.5&quot;/><circle cx=&quot;70&quot; cy=&quot;40&quot; r=&quot;4&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;210&quot; cy=&quot;40&quot; r=&quot;9&quot; fill=&quot;none&quot; stroke=&quot;#a83850&quot; stroke-width=&quot;2.5&quot;/><circle cx=&quot;210&quot; cy=&quot;40&quot; r=&quot;4&quot; fill=&quot;#046c73&quot;/><line x1=&quot;79&quot; y1=&quot;40&quot; x2=&quot;201&quot; y2=&quot;40&quot; stroke=&quot;#a83850&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;4,2&quot;/><rect x=&quot;108&quot; y=&quot;28&quot; width=&quot;64&quot; height=&quot;16&quot; rx=&quot;4&quot; fill=&quot;#faf9f6&quot; stroke=&quot;#a83850&quot; stroke-width=&quot;1&quot;/><text x=&quot;140&quot; y=&quot;39&quot; fill=&quot;#a83850&quot; font-size=&quot;9&quot; text-anchor=&quot;middle&quot;>140.0 m</text><text x=&quot;70&quot; y=&quot;60&quot; fill=&quot;#888&quot; font-size=&quot;7.5&quot; text-anchor=&quot;middle&quot;>Ctrl+click</text><text x=&quot;210&quot; y=&quot;60&quot; fill=&quot;#888&quot; font-size=&quot;7.5&quot; text-anchor=&quot;middle&quot;>Ctrl+click</text><text x=&quot;140&quot; y=&quot;74&quot; fill=&quot;#888&quot; font-size=&quot;7.5&quot; text-anchor=&quot;middle&quot;>3D distance shown automatically</text></svg>",
+          target: "editorCanvas"
+        },
+        {
+          title: "🌊 Water Bottom & Reflectors",
+          body: "Dashed lines in the editor represent geological interfaces. The <strong>water bottom</strong> is the seafloor. Below it are <strong>reflectors</strong> — layer boundaries where an acoustic impedance contrast causes energy to bounce back.\n\nDrag the dashed lines to change layer depth, or edit velocities in the <strong>Layers</strong> panel.",
+          target: 'editorCanvas'
+        },
+        {
+          title: "⚡ Velocity Model",
+          body: "Each layer has its own <strong>P-wave velocity</strong>. Velocity controls the <strong>two-way travel time (TWT)</strong> — how long a reflection takes to return. For a flat reflector at depth <em>d</em>:<br><br>&nbsp;&nbsp;<em>TWT = 2d / v</em><br><br>At non-zero offset <em>x</em> this becomes the hyperbolic NMO equation. The labels (<strong>DA</strong>, <strong>RFL</strong>, <strong>SGH</strong>, <strong>RGH</strong>) snap to the nearest amplitude peak in the zero-offset trace.",
+          target: 'layersPanel'
+        },
+        {
+          title: "👻 Free-Surface Ghosts",
+          body: "When a seismic wave reaches the sea surface it reflects back with <strong>inverted polarity</strong> — a <em>free-surface ghost</em>. The inversion happens because the sea surface is a <strong>pressure-release boundary</strong>: air has near-zero acoustic impedance compared to water, so the reflection coefficient is <em>R = −1</em>. By boundary condition, total pressure at the surface must remain zero, which forces the reflected wave to have the opposite sign to the incident one. Two types exist:<br>• <strong>SGH</strong>: shot → <em>surface</em> → receiver &nbsp; t = √(X² + (z<sub>s</sub>+z<sub>r</sub>)²) / v<sub>w</sub><br>• <strong>RGH</strong>: shot → WB → <em>surface</em> → receiver &nbsp; t = (2·WB − z<sub>s</sub> + z<sub>r</sub>) / v<sub>w</sub><br><br>Ghosts notch the spectrum and interfere with primaries. Toggle <strong>Ghosts</strong> to see them appear and disappear.<svg viewBox=\"0 0 320 145\" width=\"100%\" style=\"max-width:320px;display:block;margin:6px auto 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\"><line x1=\"10\" y1=\"24\" x2=\"310\" y2=\"24\" stroke=\"#4a9eff\" stroke-width=\"1.5\" stroke-dasharray=\"5,3\"/><text x=\"12\" y=\"18\" fill=\"#4a9eff\" font-size=\"9\">Free surface</text><line x1=\"10\" y1=\"104\" x2=\"310\" y2=\"104\" stroke=\"#b07d3a\" stroke-width=\"1.5\" stroke-dasharray=\"5,3\"/><text x=\"12\" y=\"116\" fill=\"#b07d3a\" font-size=\"9\">Reflective surface</text><circle cx=\"80\" cy=\"64\" r=\"5\" fill=\"#e05252\"/><text x=\"68\" y=\"58\" fill=\"#e05252\" font-size=\"10\" font-weight=\"bold\">S</text><circle cx=\"240\" cy=\"84\" r=\"5\" fill=\"#4a9eff\"/><text x=\"248\" y=\"84\" fill=\"#4a9eff\" font-size=\"10\" font-weight=\"bold\">R</text><line x1=\"80\" y1=\"64\" x2=\"240\" y2=\"84\" stroke=\"#999\" stroke-width=\"1.2\"/><text x=\"148\" y=\"80\" fill=\"#999\" font-size=\"9\">DA</text><polyline points=\"80,64 160,24 240,84\" fill=\"none\" stroke=\"#f9a825\" stroke-width=\"1.5\" stroke-dasharray=\"3,2\"/><text x=\"148\" y=\"16\" fill=\"#f9a825\" font-size=\"9\" font-weight=\"bold\">SGH</text><polyline points=\"80,64 140,104 196,24 240,84\" fill=\"none\" stroke=\"#66bb6a\" stroke-width=\"1.5\" stroke-dasharray=\"3,2\"/><text x=\"132\" y=\"136\" fill=\"#66bb6a\" font-size=\"9\" font-weight=\"bold\">RGH</text></svg>",
+          target: 'ghostBtn'
+        },
+        {
+          title: "📉 AVO — Amplitude vs Offset",
+          body: "Reflection amplitude varies with incidence angle because of contrasts in <strong>P-wave velocity, S-wave velocity and density</strong> across a boundary. The simplified <strong>Shuey (2-term)</strong> equation is:<br><br>&nbsp;&nbsp;<em>R(θ) = R₀ + G · sin²θ</em><br><br>where <em>R₀</em> is the <strong>intercept</strong> (normal-incidence reflection coefficient) and <em>G</em> is the <strong>gradient</strong> (rate of amplitude change with angle). A large negative G on a bright spot is a classic <strong>gas sand indicator</strong>.<br><br>Try setting G to −0.3: far-offset reflections will dim, making the gather fan inward.",
+          target: 'avoR0Input'
+        },
+        {
+          title: "📡 Ray Paths & Arrival Types",
+          body: "Each trace contains several overlapping events, each from a different ray path:<br><br>• <strong>DA</strong> — Direct Arrival: straight shot→receiver path through water<br>• <strong>RFL</strong> — Reflection from WB or deeper layer (Snell's law)<br>• <strong>SGH</strong> — Shot ghost: wave bounces off free surface near shot<br>• <strong>RGH</strong> — Receiver ghost: primary reflects off free surface near receiver<br><br>Event labels on the <em>Current</em> panel mark each arrival at the central trace. Open fullscreen and zoom in to separate closely-spaced events.<svg viewBox=&quot;0 0 320 148&quot; width=&quot;100%&quot; style=&quot;max-width:320px;display:block;margin:8px auto 0;font-family:-apple-system,sans-serif;&quot;><line x1=&quot;5&quot; y1=&quot;20&quot; x2=&quot;315&quot; y2=&quot;20&quot; stroke=&quot;#4a9eff&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;5,3&quot;/><text x=&quot;8&quot; y=&quot;16&quot; fill=&quot;#4a9eff&quot; font-size=&quot;8&quot;>Free surface z=0</text><line x1=&quot;5&quot; y1=&quot;80&quot; x2=&quot;315&quot; y2=&quot;80&quot; stroke=&quot;#b07d3a&quot; stroke-width=&quot;1.8&quot; stroke-dasharray=&quot;5,3&quot;/><text x=&quot;8&quot; y=&quot;92&quot; fill=&quot;#b07d3a&quot; font-size=&quot;8&quot;>Water bottom</text><line x1=&quot;5&quot; y1=&quot;132&quot; x2=&quot;315&quot; y2=&quot;132&quot; stroke=&quot;#3a7828&quot; stroke-width=&quot;1.8&quot; stroke-dasharray=&quot;5,3&quot;/><text x=&quot;8&quot; y=&quot;144&quot; fill=&quot;#3a7828&quot; font-size=&quot;8&quot;>Reflector</text><polygon points=&quot;60,42 67,50 53,50&quot; fill=&quot;#c96a10&quot;/><text x=&quot;60&quot; y=&quot;38&quot; fill=&quot;#c96a10&quot; font-size=&quot;9&quot; text-anchor=&quot;middle&quot; font-weight=&quot;bold&quot;>S</text><circle cx=&quot;260&quot; cy=&quot;42&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><text x=&quot;260&quot; y=&quot;37&quot; fill=&quot;#046c73&quot; font-size=&quot;9&quot; text-anchor=&quot;middle&quot; font-weight=&quot;bold&quot;>R</text><line x1=&quot;60&quot; y1=&quot;50&quot; x2=&quot;260&quot; y2=&quot;42&quot; stroke=&quot;#bbb&quot; stroke-width=&quot;1.2&quot;/><text x=&quot;160&quot; y=&quot;40&quot; fill=&quot;#999&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>DA</text><polyline points=&quot;60,50 160,132 260,42&quot; fill=&quot;none&quot; stroke=&quot;#e05252&quot; stroke-width=&quot;1.8&quot;/><text x=&quot;160&quot; y=&quot;127&quot; fill=&quot;#e05252&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot; font-weight=&quot;bold&quot;>RFL</text><polyline points=&quot;60,42 130,20 260,42&quot; fill=&quot;none&quot; stroke=&quot;#f9a825&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;3,2&quot;/><text x=&quot;195&quot; y=&quot;16&quot; fill=&quot;#f9a825&quot; font-size=&quot;8&quot; font-weight=&quot;bold&quot;>SGH</text><polyline points=&quot;60,50 185,80 228,20 260,42&quot; fill=&quot;none&quot; stroke=&quot;#66bb6a&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;3,2&quot;/><text x=&quot;240&quot; y=&quot;16&quot; fill=&quot;#66bb6a&quot; font-size=&quot;8&quot; font-weight=&quot;bold&quot;>RGH</text></svg>",
+          target: "plotUpdated"
+        },
+        {
+          title: "📈 NMO Correction",
+          body: "<strong>Normal Moveout (NMO)</strong> flattens reflection hyperbolas. Because far-offset reflections travel longer paths, they arrive later. The NMO equation is:<br><br>&nbsp;&nbsp;<em>t(x) = √(t₀² + x² / v<sub>NMO</sub>²)</em><br><br>where <em>t₀</em> is the zero-offset two-way time and <em>x</em> is the offset. NMO correction subtracts this moveout to align all offsets to <em>t₀</em> — a key step before stacking. Ghosts follow a <strong>different moveout curve</strong> and remain uncorrected.",
+          target: 'nmoBtn'
+        },
+        {
+          title: "📊 The Seismic Gather & Zoom",
+          body: "The three panels show:\n• <strong>Initial</strong> — the reference gather\n• <strong>Current</strong> — your live model (with event labels)\n• <strong>Difference</strong> — what changed\n\nClick any panel to open a <strong>fullscreen view</strong>. Inside, <strong>drag</strong> to draw a zoom box and <strong>right-click</strong> to zoom back out.",
+          target: 'plotSection'
+        },
+        {
+          title: "🔀 Shot, Receiver & CMP Gathers",
+          body: "A <strong>gather</strong> is a collection of traces grouped by a shared property. The same physical traces can be sorted into different gathers depending on the shared attribute:<br><br>• <strong>Shot gather</strong> — all receivers for one shot source. This is the raw field record you acquire.<br>• <strong>Receiver gather</strong> — all shots recorded at one receiver. Reciprocal of shot gather.<br>• <strong>CMP gather</strong> — all pairs sharing the same surface midpoint. Used for velocity analysis and stacking.<br><br>Use the <strong>Gather filter</strong> below the plot panels to isolate a specific shot or receiver line and see its gather in real time.<svg viewBox=&quot;0 0 330 135&quot; width=&quot;100%&quot; style=&quot;max-width:330px;display:block;margin:8px auto 0;font-family:-apple-system,sans-serif;&quot;><text x=&quot;165&quot; y=&quot;11&quot; fill=&quot;#888&quot; font-size=&quot;9&quot; text-anchor=&quot;middle&quot;>Surface</text><line x1=&quot;5&quot; y1=&quot;16&quot; x2=&quot;325&quot; y2=&quot;16&quot; stroke=&quot;#888&quot; stroke-width=&quot;1&quot;/><polygon points=&quot;55,16 62,24 48,24&quot; fill=&quot;#c96a10&quot;/><polygon points=&quot;130,16 137,24 123,24&quot; fill=&quot;#c96a10&quot; opacity=&quot;0.35&quot;/><polygon points=&quot;205,16 212,24 198,24&quot; fill=&quot;#c96a10&quot; opacity=&quot;0.35&quot;/><circle cx=&quot;92&quot; cy=&quot;16&quot; r=&quot;5&quot; fill=&quot;#046c73&quot; opacity=&quot;0.35&quot;/><circle cx=&quot;167&quot; cy=&quot;16&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><circle cx=&quot;242&quot; cy=&quot;16&quot; r=&quot;5&quot; fill=&quot;#046c73&quot; opacity=&quot;0.35&quot;/><line x1=&quot;55&quot; y1=&quot;24&quot; x2=&quot;92&quot; y2=&quot;16&quot; stroke=&quot;#c96a10&quot; stroke-width=&quot;1.2&quot; stroke-dasharray=&quot;3,2&quot; opacity=&quot;0.4&quot;/><line x1=&quot;55&quot; y1=&quot;24&quot; x2=&quot;167&quot; y2=&quot;16&quot; stroke=&quot;#c96a10&quot; stroke-width=&quot;1.5&quot;/><line x1=&quot;55&quot; y1=&quot;24&quot; x2=&quot;242&quot; y2=&quot;16&quot; stroke=&quot;#c96a10&quot; stroke-width=&quot;1.2&quot; stroke-dasharray=&quot;3,2&quot; opacity=&quot;0.4&quot;/><line x1=&quot;130&quot; y1=&quot;24&quot; x2=&quot;167&quot; y2=&quot;16&quot; stroke=&quot;#a83850&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;3,2&quot;/><line x1=&quot;205&quot; y1=&quot;24&quot; x2=&quot;167&quot; y2=&quot;16&quot; stroke=&quot;#a83850&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;3,2&quot;/><circle cx=&quot;92&quot; cy=&quot;68&quot; r=&quot;4&quot; fill=&quot;#3a7828&quot;/><circle cx=&quot;167&quot; cy=&quot;68&quot; r=&quot;4&quot; fill=&quot;#3a7828&quot;/><circle cx=&quot;242&quot; cy=&quot;68&quot; r=&quot;4&quot; fill=&quot;#3a7828&quot;/><text x=&quot;167&quot; y=&quot;63&quot; fill=&quot;#3a7828&quot; font-size=&quot;7.5&quot; text-anchor=&quot;middle&quot;>CMPs (midpoints)</text><text x=&quot;55&quot; y=&quot;95&quot; fill=&quot;#c96a10&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>Shot</text><text x=&quot;55&quot; y=&quot;105&quot; fill=&quot;#c96a10&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>gather</text><text x=&quot;167&quot; y=&quot;95&quot; fill=&quot;#a83850&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>Receiver</text><text x=&quot;167&quot; y=&quot;105&quot; fill=&quot;#a83850&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>gather</text><text x=&quot;167&quot; y=&quot;120&quot; fill=&quot;#3a7828&quot; font-size=&quot;8&quot; text-anchor=&quot;middle&quot;>CMP gather (shared midpoint)</text><line x1=&quot;5&quot; y1=&quot;128&quot; x2=&quot;325&quot; y2=&quot;128&quot; stroke=&quot;#b07d3a&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;5,3&quot;/></svg>",
+          target: "gatherFilterBar"
+        },
+        {
+          title: "🔍 Gather Filter & Axis Controls",
+          body: "The <strong>Gather filter</strong> (teal bar above the plots) isolates a subset of traces in all three seismic panels at once. Click <strong>+ Add filter</strong> and choose:<br>• <strong>Shot IL / XL</strong> — show only traces from one inline or crossline of shots<br>• <strong>Rec IL / XL</strong> — show only traces recorded by one receiver line<br><br>Multiple filter rows combine: all conditions in a row must match (AND); any matching row is included (OR across rows). This lets you extract a specific cross-spread or sail line.<br><br>The <strong>X-axis</strong> selector switches between <em>offset</em> (for NMO/AVO analysis) and shot/receiver coordinate (for geometry QC). The <strong>T range</strong> fields set the visible time window and the <strong>Gain</strong> slider scales amplitudes for display without changing the data.",
+          target: "addGatherFilterBtn"
+        },
+        {
+          title: "🎯 CMP Fold & Stack Quality",
+          body: "The <strong>CMP fold</strong> is how many independent traces share a midpoint bin. After Normal Moveout correction, stacking those traces suppresses random noise by approximately <em>√(fold)</em>.<br><br>The <strong>CMP fold map</strong> (bottom-right panel) colours each bin by trace count — warmer = higher fold = better SNR after stack. Cold spots mean poor illumination. The <strong>Azimuth rose</strong> tells you whether traces come uniformly from all directions (ideal) or are biased to a narrow azimuth range (potential acquisition footprint).<br><br>The green dashed <strong>CMP coverage box</strong> in the XY view and the IL/XL chips in the toolbar update live as you edit geometry.<svg viewBox=&quot;0 0 310 120&quot; width=&quot;100%&quot; style=&quot;max-width:310px;display:block;margin:8px auto 0;font-family:-apple-system,sans-serif;&quot;><text x=&quot;155&quot; y=&quot;11&quot; fill=&quot;#888&quot; font-size=&quot;9&quot; text-anchor=&quot;middle&quot;>Surface</text><line x1=&quot;5&quot; y1=&quot;16&quot; x2=&quot;305&quot; y2=&quot;16&quot; stroke=&quot;#888&quot; stroke-width=&quot;1&quot;/><polygon points=&quot;45,16 52,24 38,24&quot; fill=&quot;#c96a10&quot;/><polygon points=&quot;95,16 102,24 88,24&quot; fill=&quot;#c96a10&quot;/><polygon points=&quot;145,16 152,24 138,24&quot; fill=&quot;#c96a10&quot;/><circle cx=&quot;220&quot; cy=&quot;16&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><line x1=&quot;45&quot; y1=&quot;24&quot; x2=&quot;220&quot; y2=&quot;68&quot; stroke=&quot;#c96a10&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,2&quot; opacity=&quot;0.7&quot;/><line x1=&quot;95&quot; y1=&quot;24&quot; x2=&quot;220&quot; y2=&quot;68&quot; stroke=&quot;#c96a10&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,2&quot; opacity=&quot;0.7&quot;/><line x1=&quot;145&quot; y1=&quot;24&quot; x2=&quot;220&quot; y2=&quot;68&quot; stroke=&quot;#c96a10&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,2&quot; opacity=&quot;0.7&quot;/><circle cx=&quot;132&quot; cy=&quot;16&quot; r=&quot;4&quot; fill=&quot;#3a7828&quot; opacity=&quot;0.9&quot;/><circle cx=&quot;157&quot; cy=&quot;16&quot; r=&quot;4&quot; fill=&quot;#3a7828&quot; opacity=&quot;0.9&quot;/><circle cx=&quot;182&quot; cy=&quot;16&quot; r=&quot;4&quot; fill=&quot;#3a7828&quot; opacity=&quot;0.9&quot;/><text x=&quot;157&quot; y=&quot;11&quot; fill=&quot;#3a7828&quot; font-size=&quot;7&quot; text-anchor=&quot;middle&quot;>CMPs fold=3</text><circle cx=&quot;220&quot; cy=&quot;68&quot; r=&quot;5&quot; fill=&quot;#046c73&quot;/><text x=&quot;232&quot; y=&quot;72&quot; fill=&quot;#046c73&quot; font-size=&quot;9&quot;>R</text><line x1=&quot;5&quot; y1=&quot;95&quot; x2=&quot;305&quot; y2=&quot;95&quot; stroke=&quot;#b07d3a&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;5,3&quot;/><text x=&quot;7&quot; y=&quot;108&quot; fill=&quot;#b07d3a&quot; font-size=&quot;8&quot;>Reflector</text><rect x=&quot;115&quot; y=&quot;5&quot; width=&quot;85&quot; height=&quot;14&quot; rx=&quot;3&quot; fill=&quot;none&quot; stroke=&quot;#3a7828&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,2&quot;/><text x=&quot;157&quot; y=&quot;23&quot; fill=&quot;#888&quot; font-size=&quot;6.5&quot; text-anchor=&quot;middle&quot;>CMP coverage box</text></svg>",
+          target: "plotCMP"
+        },
+        {
+          title: "🧭 Azimuth & CMP Fold",
+          body: "The <strong>Azimuth &amp; offset rose</strong> shows the direction from each shot to each receiver, plotted as a polar histogram. Each petal represents a range of azimuths; its length is proportional to the number of traces in that direction. A <strong>uniform rose</strong> means balanced illumination from all directions — essential in 3-D surveys to detect anisotropy and avoid acquisition footprint.<br><br>The <strong>CMP fold map</strong> is a spatial histogram. Every shot–receiver pair has a <em>midpoint</em> halfway between them; that midpoint is sorted into the nearest <strong>bin</strong> — a fixed rectangular cell on the surface grid. The number in each cell is the <strong>fold</strong>: how many independent traces image that subsurface point.<br><br><strong>Why fold matters:</strong><br>• Higher fold → more stacked traces → better signal-to-noise<br>• More offset diversity → better AVO analysis<br>• Edge bins always have lower fold — the classic bull's-eye tapering at map edges<br><br>Natural bin size = (shot interval / 2) × (receiver interval / 2). Spread your geometry and watch the fold map fill in.",
+          target: 'analysisSection'
+        },
+        {
+          title: "🔄 Set as Initial",
+          body: "The <strong>Set as initial</strong> button locks your current model as the new reference. From that point on, the <em>Difference</em> panel shows only what you change next — a powerful way to isolate the effect of a single parameter like velocity, reflector depth, or ghost presence.",
+          target: 'setCurrentAsInitialBtn'
+        },
+        {
+          title: "📂 Import / Export",
+          body: "Export the current geometry as a <strong>CSV</strong> (columns: type, X, Y, Z in metres) to use in external software.\n\nImport a CSV in the same format to load a real-world or custom geometry and immediately see its gather and fold map.",
+          target: 'importExportPanel'
+        },
+        {
+          title: "🎓 You're ready!",
+          body: "You now understand the full workflow: design a geometry, set origins and move elements precisely, tune the velocity model, toggle ghosts, apply NMO, inspect AVO trends, and read the gather.<br><br>Key equations to remember:<br>• <em>TWT = 2d/v</em> (zero-offset two-way time)<br>• <em>t(x) = √(t₀² + x²/v²)</em> (NMO hyperbola)<br>• <em>R(θ) = R₀ + G·sin²θ</em> (Shuey AVO)<br><br>Good luck with your exploration!",
+          target: null
+        }
+      ];
+
+      let tutStep = 0;
+      let tutActive = false;
+      let tutHighlightEl = null;
+
+      function tutClearHighlight() {
+        if (tutHighlightEl) { tutHighlightEl.classList.remove('tut-highlight'); tutHighlightEl = null; }
+      }
+
+      function tutShowStep(i) {
+        const step = tutSteps[i];
+        document.getElementById('tutTitle').innerHTML = step.title;
+        document.getElementById('tutBody').innerHTML = step.body.replace(/\n/g, '<br>');
+        document.getElementById('tutCounter').textContent = `Step ${i + 1} of ${tutSteps.length}`;
+        document.getElementById('tutProgressBar').style.width = `${((i + 1) / tutSteps.length) * 100}%`;
+        document.getElementById('tutBackBtn').disabled = i === 0;
+        document.getElementById('tutNextBtn').textContent = i === tutSteps.length - 1 ? '✓ Done' : 'Next →';
+
+        tutClearHighlight();
+        const panel = document.getElementById('tutorialPanel');
+        if (step.target) {
+          const el = document.getElementById(step.target);
+          if (el) {
+            el.classList.add('tut-highlight');
+            tutHighlightEl = el;
+            // Scroll element into view with offset to avoid panel overlap
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Reposition panel: if target is in the bottom half of viewport, move panel to top; else bottom
+            setTimeout(() => {
+              const rect = el.getBoundingClientRect();
+              const mid = rect.top + rect.height / 2;
+              const vh = window.innerHeight;
+              if (mid > vh * 0.55) {
+                panel.style.top = '18px';
+                panel.style.bottom = 'auto';
+              } else {
+                panel.style.top = 'auto';
+                panel.style.bottom = '24px';
+              }
+            }, 350);
+          }
+        } else {
+          // No target — reset panel to default bottom position
+          panel.style.top = 'auto';
+          panel.style.bottom = '24px';
+        }
+      }
+
+      function tutStart() {
+        tutActive = true;
+        tutStep = 0;
+        document.getElementById('tutorialPanel').style.display = 'block';
+        document.getElementById('tutorialBtn').textContent = '✕ Close Tutorial';
+        tutShowStep(0);
+      }
+
+      function tutEnd() {
+        tutActive = false;
+        document.getElementById('tutorialPanel').style.display = 'none';
+        document.getElementById('tutorialBtn').textContent = '🎓 Tutorial';
+        tutClearHighlight();
+      }
+
+      document.getElementById('tutorialBtn').addEventListener('click', () => {
+        tutActive ? tutEnd() : tutStart();
+      });
+
+      document.getElementById('tutNextBtn').addEventListener('click', () => {
+        if (tutStep >= tutSteps.length - 1) { tutEnd(); return; }
+        tutStep++;
+        tutShowStep(tutStep);
+      });
+
+      document.getElementById('tutBackBtn').addEventListener('click', () => {
+        if (tutStep <= 0) return;
+        tutStep--;
+        tutShowStep(tutStep);
+      });
+
+      document.getElementById('tutSkipBtn').addEventListener('click', tutEnd);
+
+    })();
+    </script>  <div id="zPickerPopup" style="display:none;position:fixed;z-index:8000;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:0 8px 32px rgba(0,0,0,0.22);min-width:220px;max-width:320px;overflow:hidden;font-size:var(--text-xs);">
+    <div style="padding:6px 10px 4px;font-weight:700;color:var(--color-text-muted);border-bottom:1px solid var(--color-border);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;">Select object</div>
+    <div id="zPickerList" style="max-height:220px;overflow-y:auto;"></div>
+  </div>
+  <div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;"></div>
+</body>
+</html>
