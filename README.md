@@ -73,8 +73,8 @@ Receivers at z = water bottom depth, shot grid near surface above |
                         ◆shot ──◆shot ──◆shot ──◆shot
 
     Settings:
-    - *Shot*: IL × XL = N × M · origin (0, 0, 0) · IL spacing = Δx · XL spacing = Δy · depth = 0
-    - *Receivers*: IL × XL = P × Q · origin (ox, oy, WB) · IL spacing = Δrx · XL spacing = Δry · **depth z = water bottom value**
+    - Shots: IL × XL = N × M · origin (0, 0, 0) · IL spacing = Δx · XL spacing = Δy · depth = 0
+    - Receivers: IL × XL = P × Q · origin (ox, oy, WB) · IL spacing = Δrx · XL spacing = Δry · depth z = water bottom value
 ---
 
 ## Features
