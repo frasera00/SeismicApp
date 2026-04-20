@@ -28,8 +28,8 @@ Place shots and receivers in any 2D or 3D geometry and immediately see:
 
 The default configuration loads a **2D OBN setup** — one OBN at the water bottom, 1km down, and 20 shots spaced 200 m inline. You can also build:
 
-| Geometry | How to set up |
-|---|---|
+** Geometry - How to set up  **
+
 | **Streamer** |
   *Single cable* — one inline array of receivers towed behind one shot  
           
