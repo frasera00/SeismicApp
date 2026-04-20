@@ -29,7 +29,8 @@ Place shots and receivers in any 2D or 3D geometry and immediately see:
 The default configuration loads a **2D OBN setup** — one OBN at the water bottom, 1km down, and 20 shots spaced 200 m inline. You can also build:
 
 1.**Streamer**
-  *Single cable* — one inline array of receivers towed behind one shot  
+
+1.1 *Single cable* — one inline array of receivers towed behind one shot  
           
           Z ↑
             └─ → X   ◆shot ──●rec ──●rec ──●rec ──●rec
@@ -41,7 +42,7 @@ The default configuration loads a **2D OBN setup** — one OBN at the water bott
     - Shots: IL × XL = 1 × 1 · origin (0, 0, 0)
     - Receivers: IL × XL = N × 1 · origin (Δx, 0, 0) · IL spacing = Δx
 
-  *Multi-cable* — one shot, multiple parallel receiver cables offset in Y:
+1.2 *Multi-cable* — one shot, multiple parallel receiver cables offset in Y:
 
           Z ↑
             └──→ X/Y ◆shot ──●rec ──●rec ──●rec ──●rec ← all cables at z = 0
@@ -55,6 +56,7 @@ The default configuration loads a **2D OBN setup** — one OBN at the water bott
     - Receivers: IL × XL = N × M · origin (Δx, −(M−1)·Δy/2, 0) · IL spacing = Δx · XL spacing = Δy
                                  
 2.**OBN (Ocean Bottom Node)**
+
 Receivers at z = water bottom depth, shot grid near surface above |
   Full 3D illumination — every azimuth is recorded at each node.
 
