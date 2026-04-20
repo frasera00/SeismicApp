@@ -119,11 +119,11 @@ git clone https://github.com/your-username/seismic-app.git
 # Open the app — no build step needed
 open seismic-app.html
 ```
-2.
-Download `seismic-app.html` and open it in Chrome, Firefox, or Safari.
+2. Download `seismic-app.html` and open it in Chrome, Firefox, or Safari.
 
-3.
-**[Access it online](https://frasera00.github.io/SeismicApp/)**
+3.**[Access it online](https://frasera00.github.io/SeismicApp/)**
+
+
 ---
 
 ## How It's Built
