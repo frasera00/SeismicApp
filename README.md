@@ -45,7 +45,7 @@ The default configuration loads a **2D OBN setup** — one OBN at the water bott
 1.2 *Multi-cable* — one shot, multiple parallel receiver cables offset in Y:
 
           Z ↑
-            └──→ X/Y ◆shot ──●rec ──●rec ──●rec ──●rec ← all cables at z = 0
+            └─ → X/Y ◆shot ──●rec ──●rec ──●rec ──●rec ← all cables at z = 0
             
           Y ↑               ┌──●rec ──●rec ──●rec ──●rec ← cable 1 (Y = +Δy)
             └─ → X   ◆shot |──●rec ──●rec ──●rec ──●rec ← cable 2 (Y = 0)
