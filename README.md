@@ -61,14 +61,14 @@ Receivers at z = water bottom depth, shot grid near surface above |
   Full 3D illumination — every azimuth is recorded at each node.
 
           Z ↑
-            └─ → X      ◆shot ──◆shot ──◆shot ──◆shot       ↑     near surface (z ~ 0)
+            └─ → X      ◆shot ──◆shot ──◆shot ──◆shot      ↑     near surface (z ~ 0)
                                                               |
                                                               |
                           ──●rec ──●rec ──●rec ──●rec         ↓     water bottom (z = WB)
 
 
           Y ↑
-            └─ → X      ◆shot ──◆shot ──◆shot ──◆shot      --> same for receivers but with 
+            └─ → X      ◆shot ──◆shot ──◆shot ──◆shot    --> same for receivers but with 
                         ◆shot ──◆shot ──◆shot ──◆shot          origin at water bottom 
                         ◆shot ──◆shot ──◆shot ──◆shot
 
