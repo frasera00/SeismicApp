@@ -6,9 +6,7 @@ A browser-based interactive tool for exploring marine seismic reflection surveys
 
 ---
 
-## 🚀 Live Demo
-
-👉 **[Open the app](https://frasera00.github.io/SeismicApp/)**
+👉 **[Link to the app](https://frasera00.github.io/SeismicApp/)**
 
 ---
 
